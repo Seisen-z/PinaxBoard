@@ -20,6 +20,6 @@ export const config = {
      * A session refresh on a favicon request is wasted work, and refreshing on
      * requests that cannot carry auth cookies only adds latency.
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/health|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?)$).*)",
   ],
 };
