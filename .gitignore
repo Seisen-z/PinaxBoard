@@ -48,3 +48,7 @@ next-env.d.ts
 
 # documentation is kept local, not published
 *.md
+
+# database schema and env template stay local
+/supabase/
+.env.local.example
