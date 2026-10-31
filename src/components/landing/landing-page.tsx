@@ -1,208 +1,184 @@
 import Link from "next/link";
-import { Noto_Serif_Display } from "next/font/google";
 
+import { HeroBoard } from "@/components/landing/hero-board";
 import { TacklyMark } from "@/components/brand/tackly-mark";
-import "./landing.css";
 
-/**
- * Greek-capable display face: the word "πίναξ" is part of the identity, so
- * the headline face has to set it properly rather than fall back.
- */
-const display = Noto_Serif_Display({
-  subsets: ["latin", "greek"],
-  variable: "--font-pb-display",
-  display: "swap",
-});
+const clayPrimary =
+  "tk-clay inline-flex h-12 items-center justify-center rounded-lg bg-[image:var(--clay-primary-gradient)] px-6 text-base font-medium text-primary-foreground transition hover:brightness-110 active:tk-clay-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const clayNav =
+  "tk-clay inline-flex h-9 items-center justify-center rounded-md bg-[image:var(--clay-primary-gradient)] px-3.5 text-sm font-medium text-primary-foreground transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const quietLink =
+  "text-sm font-medium text-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+
+/** A feature tile tinted with one of the app's own lane colors. */
+function Tile({ color, className = "", children }: { color: string; className?: string; children: React.ReactNode }) {
+  return (
+    <article
+      className={`flex flex-col rounded-[var(--radius-xl)] border border-border p-6 ${className}`}
+      style={{ background: `color-mix(in srgb, ${color} 10%, var(--surface))` }}
+    >
+      {children}
+    </article>
+  );
+}
 
 /**
  * What a signed-out visitor sees at `/`.
  *
- * Everything shown here exists in the app. Notes use the app's own paper
- * tokens so the page reads as the product, not as marketing around it.
+ * Built from the app's own tokens (surfaces, lane colors, paper colors, clay
+ * buttons, Geist) so the page and the product read as one thing, and the
+ * hero is the real board interaction rather than a picture of it.
  */
 export function LandingPage() {
   return (
-    <div className={`pb ${display.variable}`}>
-      <div className="pb-wrap">
-        <nav className="pb-nav" aria-label="Main">
-          <Link href="/" className="pb-brand">
+    <div className="min-h-dvh overflow-x-clip bg-background text-foreground">
+      <div className="mx-auto max-w-[1240px] px-4 sm:px-8 lg:px-12">
+        <nav className="flex items-center justify-between py-5" aria-label="Main">
+          <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
             <TacklyMark size={34} />
             Pinax Board
           </Link>
-          <Link href="/login" className="pb-signin">Sign in</Link>
+          <div className="flex items-center gap-5">
+            <Link href="/login" className={quietLink}>Sign in</Link>
+            <Link href="/register" className={clayNav}>Create an account</Link>
+          </div>
         </nav>
 
         <main>
-          <section className="pb-hero" aria-labelledby="pb-title">
+          <section className="grid items-center gap-10 pb-16 pt-6 lg:grid-cols-[4.4fr_7.6fr] lg:gap-12 lg:pt-12" aria-labelledby="hero-title">
             <div>
-              <p className="pb-etym">
-                <span lang="el">πίναξ</span> — a writing board
+              <p className="mb-4 text-sm text-muted-foreground">
+                <span lang="el" className="font-medium text-foreground">πίναξ</span> · Greek for a writing board
               </p>
-              <h1 id="pb-title" className="pb-h1">
+              <h1 id="hero-title" className="text-[clamp(2.4rem,4.6vw,4rem)] font-semibold leading-[1.04] tracking-[-0.03em]">
                 Pin down everything you need to remember.
               </h1>
-              <p className="pb-lede">
+              <p className="mt-5 max-w-[46ch] text-lg leading-relaxed text-muted-foreground">
                 Sticky notes on columns or a free canvas, with rich text,
                 reminders and files. Share a board when someone else needs to
                 see it.
               </p>
-              <div className="pb-actions">
-                <Link href="/register" className="pb-primary">Create an account</Link>
-                <Link href="/app" className="pb-secondary">Try it without an account</Link>
+              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+                <Link href="/register" className={clayPrimary}>Create an account</Link>
+                <Link href="/app" className={quietLink}>Try it without an account</Link>
               </div>
-              <p className="pb-fine">
+              <p className="mt-4 max-w-[46ch] text-sm text-muted-foreground">
                 Without an account, your notes stay in this browser and are
                 never uploaded.
               </p>
             </div>
 
-            <div className="pb-tablet-col">
-              <figure className="pb-tablet" aria-label="A Pinax Board with three columns of notes">
-                <div className="pb-tablet-head">
-                  <span className="pb-incise" lang="el">ΠΙΝΑΞ</span>
-                  <span className="pb-tablet-meta">Board · 3 columns</span>
-                </div>
-                <div className="pb-cols">
-                  <div>
-                    <h2 className="pb-col-title"><span>To Do</span><span>3</span></h2>
-                    <div className="pb-note pb-yellow pb-tilt-l">
-                      <b>Renew passport</b>
-                      <small>Due 14 Nov · High priority</small>
-                    </div>
-                    <div className="pb-note pb-pink pb-tilt-r">
-                      <b>Reply to landlord</b>
-                      <small>About the lease renewal</small>
-                    </div>
-                    <div className="pb-note pb-blue pb-tilt-l">
-                      <b>Book dentist</b>
-                      <small>Before the end of the month</small>
-                    </div>
-                  </div>
-                  <div>
-                    <h2 className="pb-col-title"><span>In Progress</span><span>2</span></h2>
-                    <div className="pb-note pb-blue pb-tilt-r">
-                      <b>Thesis, chapter 3</b>
-                      <div className="pb-check"><span className="pb-box on" />Outline</div>
-                      <div className="pb-check"><span className="pb-box on" />Literature table</div>
-                      <div className="pb-check"><span className="pb-box" />Write discussion</div>
-                    </div>
-                    <div className="pb-note pb-yellow pb-tilt-l">
-                      <b>Plan Cebu trip</b>
-                      <small>Flights and ferry</small>
-                    </div>
-                  </div>
-                  <div>
-                    <h2 className="pb-col-title"><span>Done</span><span>2</span></h2>
-                    <div className="pb-note pb-mint pb-tilt-l">
-                      <b>Order groceries</b>
-                      <small>Completed Tuesday</small>
-                    </div>
-                    <div className="pb-note pb-pink pb-tilt-r">
-                      <b>Pay electricity bill</b>
-                      <small>Completed Monday</small>
-                    </div>
-                  </div>
-                </div>
-              </figure>
-            </div>
+            <HeroBoard />
           </section>
 
-          <section className="pb-section" aria-labelledby="pb-what">
-            <h2 id="pb-what" className="pb-h2">What goes on the board</h2>
-            <p className="pb-sub">
+          <section className="border-t border-border py-16" aria-labelledby="what-title">
+            <h2 id="what-title" className="max-w-[18ch] text-[clamp(1.9rem,3.4vw,2.9rem)] font-semibold leading-[1.08] tracking-[-0.025em]">
+              What goes on the board
+            </h2>
+            <p className="mt-3 max-w-[52ch] text-lg leading-relaxed text-muted-foreground">
               One set of notes, seen as a board, a grid, a list, a calendar, a
               timeline or a free canvas.
             </p>
 
-            <div className="pb-grid">
-              <article className="pb-tile pb-t-canvas">
-                <h3>A canvas for notes that don&apos;t fit in columns</h3>
-                <p>
+            <div className="mt-10 grid grid-cols-12 gap-4">
+              <Tile color="var(--status-in-progress)" className="col-span-12 md:col-span-7 md:row-span-2">
+                <h3 className="text-lg font-semibold tracking-tight">A canvas for notes that don&apos;t fit in columns</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
                   Drag, resize and rotate notes anywhere. Add a note to the
                   canvas, or send a whole column over. Taking a note off the
                   canvas leaves it on its column.
                 </p>
-                <div className="pb-canvas-art" aria-hidden="true">
-                  <div className="pb-note pb-yellow pb-tilt-l" style={{ left: "6%", top: "12%" }}><b>Trip ideas</b><small>Cebu, Batanes</small></div>
-                  <div className="pb-note pb-blue pb-tilt-r" style={{ left: "38%", top: "34%" }}><b>Budget</b><small>Flights first</small></div>
-                  <div className="pb-note pb-pink pb-tilt-l" style={{ left: "68%", top: "8%" }}><b>Pack</b><small>Charger, adaptor</small></div>
-                  <div className="pb-note pb-mint pb-tilt-r" style={{ left: "14%", top: "60%" }}><b>Book</b><small>Ferry tickets</small></div>
+                <div className="relative mt-6 min-h-[300px] flex-1 rounded-[var(--radius-lg)] border border-dashed border-border bg-background/60" aria-hidden="true">
+                  <CanvasNote paper="yellow" left="6%" top="10%" tilt={-1.5} title="Trip ideas" detail="Cebu, Batanes" />
+                  <CanvasNote paper="blue" left="38%" top="34%" tilt={1.2} title="Budget" detail="Flights first" />
+                  <CanvasNote paper="pink" left="66%" top="8%" tilt={-1} title="Pack" detail="Charger, adaptor" />
+                  <CanvasNote paper="mint" left="12%" top="60%" tilt={1.4} title="Book" detail="Ferry tickets" />
                 </div>
-              </article>
+              </Tile>
 
-              <article className="pb-tile pb-t-editor">
-                <h3>Write in rich text</h3>
-                <p>Type / in any note to insert a block.</p>
-                <div className="pb-slash" aria-hidden="true">
-                  <div><span>Checklist</span></div>
-                  <div><span>Heading 1</span></div>
-                  <div><span>Image</span></div>
-                  <div><span>Quote</span></div>
-                </div>
-              </article>
+              <Tile color="var(--status-ideas)" className="col-span-12 md:col-span-5">
+                <h3 className="text-lg font-semibold tracking-tight">Write in rich text</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">Type / in any note to insert a block.</p>
+                <ul className="mt-4 overflow-hidden rounded-[var(--radius-md)] border border-border bg-surface text-sm" aria-hidden="true">
+                  {["Checklist", "Heading 1", "Image", "Quote"].map((label) => (
+                    <li key={label} className="border-b border-border px-3 py-2 last:border-b-0">{label}</li>
+                  ))}
+                </ul>
+              </Tile>
 
-              <article className="pb-tile pb-t-remind">
-                <h3>Due dates and reminders</h3>
-                <p>
+              <Tile color="var(--status-review)" className="col-span-12 md:col-span-5">
+                <h3 className="text-lg font-semibold tracking-tight">Due dates and reminders</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
                   Set a start date, a due date and a repeat. Reminders show in
                   the app while it&apos;s open, and as browser alerts if you
                   allow them.
                 </p>
-                <div className="pb-chips">
-                  <span className="pb-chip">Calendar</span>
-                  <span className="pb-chip">Timeline</span>
-                  <span className="pb-chip">Repeat</span>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {["Calendar", "Timeline", "Repeat"].map((label) => (
+                    <span key={label} className="rounded-full border border-border bg-surface px-3 py-1 text-xs">{label}</span>
+                  ))}
                 </div>
-              </article>
+              </Tile>
 
-              <article className="pb-tile pb-t-share">
-                <h3>Share one board</h3>
-                <p>
+              <Tile color="var(--status-done)" className="col-span-12 md:col-span-4">
+                <h3 className="text-lg font-semibold tracking-tight">Share one board</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
                   Invite someone as a viewer or an editor. The link works once
                   and expires in 7 days. Only that board is shared.
                 </p>
-              </article>
+              </Tile>
 
-              <article className="pb-tile pb-t-local">
-                <h3>Saves first, syncs when you sign in</h3>
-                <p>
+              <Tile color="var(--status-todo)" className="col-span-12 md:col-span-4">
+                <h3 className="text-lg font-semibold tracking-tight">Saves first, syncs when you sign in</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
                   Edits save in your browser straight away and reach your
                   account a moment later. Attach images, videos and files to
                   any note once you&apos;re signed in.
                 </p>
-              </article>
+              </Tile>
 
-              <article className="pb-tile pb-t-export">
-                <h3>Take your notes with you</h3>
-                <p>
+              <Tile color="var(--priority-high)" className="col-span-12 md:col-span-4">
+                <h3 className="text-lg font-semibold tracking-tight">Take your notes with you</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
                   Export a note, a board or a workspace as JSON, Markdown,
                   text, PDF or a full backup, and import them back.
                 </p>
-              </article>
+              </Tile>
             </div>
           </section>
 
-          <section className="pb-close" aria-labelledby="pb-start">
-            <h2 id="pb-start" className="pb-h2">Start with an empty board.</h2>
-            <div>
-              <div className="pb-actions" style={{ marginTop: 0 }}>
-                <Link href="/register" className="pb-primary">Create an account</Link>
-                <Link href="/app" className="pb-secondary">Try it without an account</Link>
-              </div>
-              <p className="pb-fine">
-                <span lang="el">Πίναξ</span> was the Greek word for a writing
-                tablet or board. This is the one for your notes.
-              </p>
+          <section className="grid gap-6 border-t border-border py-16 md:grid-cols-[7fr_5fr] md:items-end" aria-labelledby="start-title">
+            <h2 id="start-title" className="max-w-[16ch] text-[clamp(1.9rem,3.4vw,2.9rem)] font-semibold leading-[1.08] tracking-[-0.025em]">
+              Start with an empty board.
+            </h2>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <Link href="/register" className={clayPrimary}>Create an account</Link>
+              <Link href="/app" className={quietLink}>Try it without an account</Link>
             </div>
           </section>
         </main>
 
-        <footer className="pb-foot">
+        <footer className="flex flex-wrap gap-x-6 gap-y-2 border-t border-border py-7 text-sm text-muted-foreground">
           <span>Pinax Board</span>
-          <Link href="/privacy">Privacy</Link>
-          <Link href="/login">Sign in</Link>
+          <Link href="/privacy" className="underline underline-offset-4">Privacy</Link>
+          <Link href="/login" className="underline underline-offset-4">Sign in</Link>
         </footer>
       </div>
+    </div>
+  );
+}
+
+function CanvasNote({ paper, left, top, tilt, title, detail }: { paper: string; left: string; top: string; tilt: number; title: string; detail: string }) {
+  return (
+    <div
+      className="tk-paper absolute w-[min(150px,34%)] rounded-[var(--radius-note)] border px-3 py-2.5 text-sm"
+      style={{
+        left, top, transform: `rotate(${tilt}deg)`,
+        background: `var(--paper-${paper})`, color: `var(--paper-${paper}-ink)`, borderColor: `var(--paper-${paper}-edge)`,
+      }}
+    >
+      <b className="block font-semibold">{title}</b>
+      <span className="block text-xs opacity-75">{detail}</span>
     </div>
   );
 }
