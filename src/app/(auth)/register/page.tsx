@@ -34,6 +34,9 @@ export default async function RegisterPage() {
       <Link href="/" className="text-xs text-muted-foreground underline">
         Continue without an account
       </Link>
+      <p className="text-xs text-muted-foreground">
+        <Link href="/privacy" className="underline">Privacy</Link>
+      </p>
     </div>
   );
 }
