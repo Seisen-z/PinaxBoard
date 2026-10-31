@@ -54,6 +54,10 @@ export function resolveNoteAppearance(
       backgroundColor: surface,
       color: ink,
       borderColor: edge,
+      // Consumed by the decorated designs (src/styles/note-designs.css).
+      "--paper-surface": surface,
+      "--paper-ink": ink,
+      "--paper-edge": edge,
       // Consumed by .tk-paper-lined / .tk-paper-grid.
       "--paper-rule": `color-mix(in srgb, ${edge} 70%, transparent)`,
     },

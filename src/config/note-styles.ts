@@ -55,6 +55,8 @@ export function getNoteColor(id: NoteColorId): NoteColorDefinition {
 export interface NoteStyleDefinition {
   id: NoteStyleId;
   label: string;
+  /** "paper" is a plain surface; "design" is decorated (spiral, tape, stickers). */
+  group: "paper" | "design";
   /** Utility classes from globals.css that paint the paper texture. */
   textureClass: string;
   /** Style-specific color override, used when the style implies its paper. */
@@ -62,13 +64,23 @@ export interface NoteStyleDefinition {
 }
 
 export const NOTE_STYLE_DEFINITIONS: readonly NoteStyleDefinition[] = [
-  { id: "sticky", label: "Sticky Note", textureClass: "tk-paper-texture" },
-  { id: "notebook", label: "Notebook", textureClass: "tk-paper-lined" },
-  { id: "lined", label: "Lined Paper", textureClass: "tk-paper-lined" },
-  { id: "grid", label: "Grid Paper", textureClass: "tk-paper-grid" },
-  { id: "minimal", label: "Minimal", textureClass: "" },
-  { id: "dark", label: "Dark Card", textureClass: "", forcedColor: "slate" },
-  { id: "kraft", label: "Kraft Paper", textureClass: "tk-paper-texture", forcedColor: "kraft" },
+  { id: "sticky", group: "paper", label: "Sticky Note", textureClass: "tk-paper-texture" },
+  { id: "notebook", group: "paper", label: "Notebook", textureClass: "tk-paper-lined" },
+  { id: "lined", group: "paper", label: "Lined Paper", textureClass: "tk-paper-lined" },
+  { id: "grid", group: "paper", label: "Grid Paper", textureClass: "tk-paper-grid" },
+  { id: "minimal", group: "paper", label: "Minimal", textureClass: "" },
+  { id: "dark", group: "paper", label: "Dark Card", textureClass: "", forcedColor: "slate" },
+  { id: "kraft", group: "paper", label: "Kraft Paper", textureClass: "tk-paper-texture", forcedColor: "kraft" },
+  { id: "spiral", group: "design", label: "Spiral notebook", textureClass: "tk-design tk-design-spiral" },
+  { id: "stitched", group: "design", label: "Stitched patch", textureClass: "tk-design tk-design-stitched" },
+  { id: "wave", group: "design", label: "Wave header", textureClass: "tk-design tk-design-wave" },
+  { id: "tape", group: "design", label: "Washi tape", textureClass: "tk-design tk-design-tape" },
+  { id: "clip", group: "design", label: "Paperclip", textureClass: "tk-design tk-design-clip" },
+  { id: "pad", group: "design", label: "Sticky pad", textureClass: "tk-design tk-design-pad" },
+  { id: "cloud", group: "design", label: "Cloud and bow", textureClass: "tk-design tk-design-cloud" },
+  { id: "hand", group: "design", label: "Hand-drawn", textureClass: "tk-design tk-design-hand" },
+  { id: "bunting", group: "design", label: "Bunting", textureClass: "tk-design tk-design-bunting" },
+  { id: "floral", group: "design", label: "Floral", textureClass: "tk-design tk-design-floral" },
 ] as const;
 
 const STYLE_BY_ID = new Map<NoteStyleId, NoteStyleDefinition>(

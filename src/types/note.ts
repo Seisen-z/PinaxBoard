@@ -15,6 +15,17 @@ export const NOTE_STYLES = [
   "minimal",
   "dark",
   "kraft",
+  // Decorated designs (src/styles/note-designs.css).
+  "spiral",
+  "stitched",
+  "wave",
+  "tape",
+  "clip",
+  "pad",
+  "cloud",
+  "hand",
+  "bunting",
+  "floral",
 ] as const;
 export type NoteStyleId = (typeof NOTE_STYLES)[number];
 

@@ -18,8 +18,9 @@ export default defineConfig({
     /*
      * Integration tests drive the whole shell through userEvent, which is slow
      * in jsdom — a single click can take a second or two under load. The 5s
-     * default turns that into flake that looks like a product bug.
+     * default turns that into flake that looks like a product bug. The shell
+     * integration tests take ~20s each when the whole suite runs in parallel.
      */
-    testTimeout: 20_000,
+    testTimeout: 60_000,
   },
 });

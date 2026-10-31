@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "../styles/tokens.css";
+@import "../styles/note-designs.css";
 
 /**
  * shadcn components use the `dark:` variant. Tackly selects its theme with a
