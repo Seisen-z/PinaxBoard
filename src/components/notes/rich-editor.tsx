@@ -4,7 +4,7 @@ import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/r
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { EditorState } from "@tiptap/pm/state";
-import { Undo2, Redo2 } from "lucide-react";
+import { ListChecks, Redo2, Undo2 } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
 import { SlashMenu, type SlashMenuPosition } from "@/components/notes/slash-menu";
 import { noteExtensions } from "@/lib/tiptap/extensions";
@@ -405,6 +405,7 @@ function EditorHistoryControls({ editor, editable }: { editor: Editor; editable:
   const history = useEditorState({ editor, selector: ({ editor }) => ({
     undo: editor.isEditable && editor.can().undo(),
     redo: editor.isEditable && editor.can().redo(),
+    checklist: editor.isActive("taskList"),
   }) });
   return (
     <div role="toolbar" aria-label="Text history" className="mb-3 flex items-center gap-1 border-b border-current/20 pb-2">
@@ -415,6 +416,10 @@ function EditorHistoryControls({ editor, editable }: { editor: Editor; editable:
         disabled={!editable || !history.redo} onMouseDown={(event) => event.preventDefault()}
         onClick={() => { if (editable && editor.isEditable) editor.chain().focus().redo().run(); }} />
       <span className="ml-2 text-xs text-current/60">Text history</span>
+      <IconButton label="Checklist" title="Turn this line into a checklist" icon={<ListChecks size={16} />} variant="ghost" size="sm"
+        className={cn("ml-auto", history.checklist && "bg-current/15")} aria-pressed={history.checklist}
+        disabled={!editable} onMouseDown={(event) => event.preventDefault()}
+        onClick={() => { if (editable && editor.isEditable) editor.chain().focus().toggleTaskList().run(); }} />
     </div>
   );
 }
