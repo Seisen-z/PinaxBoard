@@ -1,7 +1,14 @@
+import { ArrowRight, BookOpenText, GraduationCap, House, NotebookPen, Plane } from "lucide-react";
 import Link from "next/link";
 
-import { HeroBoard } from "@/components/landing/hero-board";
 import { TacklyMark } from "@/components/brand/tackly-mark";
+import { HeroBoard } from "@/components/landing/hero-board";
+import {
+  CalendarVisual,
+  CanvasVisual,
+  EditorVisual,
+  ShareVisual,
+} from "@/components/landing/landing-visuals";
 
 const clayPrimary =
   "tk-clay inline-flex h-12 items-center justify-center rounded-lg bg-[image:var(--clay-primary-gradient)] px-6 text-base font-medium text-primary-foreground transition hover:brightness-110 active:tk-clay-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
@@ -10,13 +17,41 @@ const clayNav =
 const quietLink =
   "text-sm font-medium text-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
-/** A feature tile tinted with one of the app's own lane colors. */
-function Tile({ color, className = "", children }: { color: string; className?: string; children: React.ReactNode }) {
+const USE_CASES = [
+  { title: "Plan a trip", icon: Plane, color: "var(--status-in-progress)" },
+  { title: "Track your coursework", icon: GraduationCap, color: "var(--status-review)" },
+  { title: "Run a household", icon: House, color: "var(--status-done)" },
+  { title: "Keep meeting notes", icon: NotebookPen, color: "var(--status-ideas)" },
+  { title: "Write a thesis or report", icon: BookOpenText, color: "var(--priority-high)" },
+] as const;
+
+/** A feature card: eyebrow, headline, link into the app, and a real screen. */
+function Feature({
+  eyebrow,
+  title,
+  className = "",
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <article
-      className={`flex flex-col rounded-[var(--radius-xl)] border border-border p-6 ${className}`}
-      style={{ background: `color-mix(in srgb, ${color} 10%, var(--surface))` }}
-    >
+    <article className={`flex flex-col overflow-hidden rounded-[var(--radius-2xl)] border border-border bg-surface-sunken ${className}`}>
+      <header className="flex items-start justify-between gap-6 p-7 pb-0">
+        <div>
+          <p className="text-sm text-muted-foreground">{eyebrow}</p>
+          <h3 className="mt-1.5 max-w-[22ch] text-xl font-semibold leading-snug tracking-tight">{title}</h3>
+        </div>
+        <Link
+          href="/app"
+          aria-label={`Try it: ${title}`}
+          className="grid size-9 shrink-0 place-items-center rounded-full bg-foreground text-background transition hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
+          <ArrowRight size={16} />
+        </Link>
+      </header>
       {children}
     </article>
   );
@@ -25,9 +60,9 @@ function Tile({ color, className = "", children }: { color: string; className?: 
 /**
  * What a signed-out visitor sees at `/`.
  *
- * Built from the app's own tokens (surfaces, lane colors, paper colors, clay
- * buttons, Geist) so the page and the product read as one thing, and the
- * hero is the real board interaction rather than a picture of it.
+ * Built from the app's own tokens so the page and the product read as one
+ * thing. The hero is the real board interaction, and every feature shows the
+ * real screen with realistic data instead of describing it.
  */
 export function LandingPage() {
   return (
@@ -45,7 +80,7 @@ export function LandingPage() {
         </nav>
 
         <main>
-          <section className="grid items-center gap-10 pb-16 pt-6 lg:grid-cols-[4.4fr_7.6fr] lg:gap-12 lg:pt-12" aria-labelledby="hero-title">
+          <section className="grid items-center gap-10 pb-20 pt-6 lg:grid-cols-[4.4fr_7.6fr] lg:gap-12 lg:pt-12" aria-labelledby="hero-title">
             <div>
               <p className="mb-4 text-sm text-muted-foreground">
                 <span lang="el" className="font-medium text-foreground">πίναξ</span> · Greek for a writing board
@@ -71,79 +106,80 @@ export function LandingPage() {
             <HeroBoard />
           </section>
 
-          <section className="border-t border-border py-16" aria-labelledby="what-title">
-            <h2 id="what-title" className="max-w-[18ch] text-[clamp(1.9rem,3.4vw,2.9rem)] font-semibold leading-[1.08] tracking-[-0.025em]">
-              What goes on the board
+          <section className="pb-20" aria-labelledby="features-title">
+            <h2 id="features-title" className="text-[clamp(2rem,4.2vw,3.4rem)] font-semibold leading-[1.05] tracking-[-0.03em]">
+              Notes that go further than a list.
             </h2>
-            <p className="mt-3 max-w-[52ch] text-lg leading-relaxed text-muted-foreground">
-              One set of notes, seen as a board, a grid, a list, a calendar, a
-              timeline or a free canvas.
-            </p>
 
-            <div className="mt-10 grid grid-cols-12 gap-4">
-              <Tile color="var(--status-in-progress)" className="col-span-12 md:col-span-7 md:row-span-2">
-                <h3 className="text-lg font-semibold tracking-tight">A canvas for notes that don&apos;t fit in columns</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-                  Drag, resize and rotate notes anywhere. Add a note to the
-                  canvas, or send a whole column over. Taking a note off the
-                  canvas leaves it on its column.
-                </p>
-                <div className="relative mt-6 min-h-[300px] flex-1 rounded-[var(--radius-lg)] border border-dashed border-border bg-background/60" aria-hidden="true">
-                  <CanvasNote paper="yellow" left="6%" top="10%" tilt={-1.5} title="Trip ideas" detail="Cebu, Batanes" />
-                  <CanvasNote paper="blue" left="38%" top="34%" tilt={1.2} title="Budget" detail="Flights first" />
-                  <CanvasNote paper="pink" left="66%" top="8%" tilt={-1} title="Pack" detail="Charger, adaptor" />
-                  <CanvasNote paper="mint" left="12%" top="60%" tilt={1.4} title="Book" detail="Ferry tickets" />
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
+              <Feature eyebrow="Write" title="Notes with real structure: checklists, dates, tags and files.">
+                <div className="mt-6 h-[470px] overflow-hidden px-7">
+                  <EditorVisual />
                 </div>
-              </Tile>
+              </Feature>
 
-              <Tile color="var(--status-ideas)" className="col-span-12 md:col-span-5">
-                <h3 className="text-lg font-semibold tracking-tight">Write in rich text</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">Type / in any note to insert a block.</p>
-                <ul className="mt-4 overflow-hidden rounded-[var(--radius-md)] border border-border bg-surface text-sm" aria-hidden="true">
-                  {["Checklist", "Heading 1", "Image", "Quote"].map((label) => (
-                    <li key={label} className="border-b border-border px-3 py-2 last:border-b-0">{label}</li>
-                  ))}
-                </ul>
-              </Tile>
-
-              <Tile color="var(--status-review)" className="col-span-12 md:col-span-5">
-                <h3 className="text-lg font-semibold tracking-tight">Due dates and reminders</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-                  Set a start date, a due date and a repeat. Reminders show in
-                  the app while it&apos;s open, and as browser alerts if you
-                  allow them.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {["Calendar", "Timeline", "Repeat"].map((label) => (
-                    <span key={label} className="rounded-full border border-border bg-surface px-3 py-1 text-xs">{label}</span>
-                  ))}
+              <Feature eyebrow="Plan" title="See every due date and reminder on a calendar.">
+                <div className="mt-6 h-[470px] overflow-hidden px-7">
+                  <CalendarVisual />
                 </div>
-              </Tile>
+              </Feature>
 
-              <Tile color="var(--status-done)" className="col-span-12 md:col-span-4">
-                <h3 className="text-lg font-semibold tracking-tight">Share one board</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-                  Invite someone as a viewer or an editor. The link works once
-                  and expires in 7 days. Only that board is shared.
-                </p>
-              </Tile>
+              <Feature eyebrow="Lay it out" title="Move from columns to a free canvas, then share it." className="md:col-span-2">
+                <div className="relative mt-6 grid gap-4 px-7 pb-7 md:block md:h-[460px] md:pb-0">
+                  <div className="md:absolute md:left-7 md:right-[26%] md:top-0">
+                    <CanvasVisual />
+                  </div>
+                  <div className="md:absolute md:right-7 md:top-16 md:w-[340px]">
+                    <ShareVisual />
+                  </div>
+                </div>
+              </Feature>
+            </div>
+          </section>
 
-              <Tile color="var(--status-todo)" className="col-span-12 md:col-span-4">
-                <h3 className="text-lg font-semibold tracking-tight">Saves first, syncs when you sign in</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-                  Edits save in your browser straight away and reach your
-                  account a moment later. Attach images, videos and files to
-                  any note once you&apos;re signed in.
-                </p>
-              </Tile>
+          <section className="pb-20" aria-labelledby="uses-title">
+            <h2 id="uses-title" className="text-sm font-normal text-muted-foreground">What people use a board for</h2>
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {USE_CASES.map(({ title, icon: Icon, color }) => (
+                <li key={title}>
+                  <Link
+                    href="/app"
+                    className="flex h-full flex-col gap-8 rounded-[var(--radius-xl)] border border-border bg-surface p-5 transition hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    <span
+                      className="grid size-10 place-items-center rounded-full"
+                      style={{ background: `color-mix(in srgb, ${color} 28%, var(--surface))` }}
+                    >
+                      <Icon size={18} aria-hidden="true" />
+                    </span>
+                    <span className="font-semibold leading-snug">{title} →</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
 
-              <Tile color="var(--priority-high)" className="col-span-12 md:col-span-4">
-                <h3 className="text-lg font-semibold tracking-tight">Take your notes with you</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-                  Export a note, a board or a workspace as JSON, Markdown,
-                  text, PDF or a full backup, and import them back.
-                </p>
-              </Tile>
+          <section className="grid gap-6 border-t border-border py-16 md:grid-cols-3" aria-label="Good to know">
+            <div>
+              <h3 className="font-semibold">Saves first, syncs when you sign in</h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+                Edits save in your browser straight away and reach your
+                account a moment later.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold">Share one board, not everything</h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+                Invite someone as a viewer or an editor. Only that board is
+                shared, and the link expires in 7 days.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold">Take your notes with you</h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+                Export as JSON, Markdown, text, PDF or a full backup, and
+                import them back.
+              </p>
             </div>
           </section>
 
@@ -164,21 +200,6 @@ export function LandingPage() {
           <Link href="/login" className="underline underline-offset-4">Sign in</Link>
         </footer>
       </div>
-    </div>
-  );
-}
-
-function CanvasNote({ paper, left, top, tilt, title, detail }: { paper: string; left: string; top: string; tilt: number; title: string; detail: string }) {
-  return (
-    <div
-      className="tk-paper absolute w-[min(150px,34%)] rounded-[var(--radius-note)] border px-3 py-2.5 text-sm"
-      style={{
-        left, top, transform: `rotate(${tilt}deg)`,
-        background: `var(--paper-${paper})`, color: `var(--paper-${paper}-ink)`, borderColor: `var(--paper-${paper}-edge)`,
-      }}
-    >
-      <b className="block font-semibold">{title}</b>
-      <span className="block text-xs opacity-75">{detail}</span>
     </div>
   );
 }
