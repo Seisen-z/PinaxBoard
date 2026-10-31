@@ -1,0 +1,402 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "../styles/tokens.css";
+
+/**
+ * shadcn components use the `dark:` variant. Tackly selects its theme with a
+ * `data-theme` attribute rather than a `.dark` class (see src/config/themes.ts),
+ * so the variant is rebound here — otherwise every `dark:` utility a shadcn
+ * component ships with would be dead code.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/**
+ * Token → Tailwind utility bridge.
+ *
+ * `inline` means Tailwind emits `var(--token)` rather than copying the value,
+ * so a runtime theme swap (see src/config/themes.ts) re-colors every utility
+ * without a rebuild.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-panel: var(--surface-panel);
+  --color-surface-panel-soft: var(--surface-panel-soft);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-sidebar: var(--surface-sidebar);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-ring: var(--ring);
+
+  --color-lane-divider: var(--lane-divider);
+
+  --color-status-todo: var(--status-todo);
+  --color-status-in-progress: var(--status-in-progress);
+  --color-status-review: var(--status-review);
+  --color-status-done: var(--status-done);
+  --color-status-ideas: var(--status-ideas);
+
+  --color-priority-none: var(--priority-none);
+  --color-priority-low: var(--priority-low);
+  --color-priority-medium: var(--priority-medium);
+  --color-priority-high: var(--priority-high);
+  --color-priority-urgent: var(--priority-urgent);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-note: var(--radius-note);
+
+  --shadow-note: var(--note-shadow);
+  --shadow-note-hover: var(--note-shadow-hover);
+  --shadow-note-drag: var(--note-shadow-drag);
+  --shadow-panel-sm: var(--panel-shadow-sm);
+  --shadow-panel-md: var(--panel-shadow-md);
+  --shadow-clay: var(--clay-shadow);
+  --shadow-clay-pressed: var(--clay-shadow-pressed);
+
+  /* shadcn/ui semantic names — aliased onto Tackly tokens in tokens.css. */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input: var(--input);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  html[data-theme="light"] {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Accessibility: focus must stay visible everywhere (spec §62). */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* Spec §48 — honour the OS reduced-motion preference. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /**
+   * The one and only element permitted to use blur/brightness filters
+   * (FRONTEND_SPEC.md §8, §53). Foreground UI stays solid.
+   */
+  .tk-background-layer {
+    filter: blur(var(--bg-blur)) brightness(var(--bg-brightness))
+      saturate(var(--bg-saturation)) contrast(var(--bg-contrast));
+    opacity: var(--bg-opacity);
+  }
+
+  /* Subtle raised control — spec §7, §45. */
+  .tk-clay {
+    border: 1px solid var(--clay-border-color);
+    box-shadow: var(--clay-shadow);
+  }
+
+  .tk-clay-pressed {
+    transform: translateY(1px);
+    box-shadow: var(--clay-shadow-pressed);
+  }
+
+  /* Paper note body — never receives clay inner shadows (spec §16). */
+  .tk-paper {
+    box-shadow: var(--note-shadow);
+  }
+
+  /* Optional paper textures (spec §5.3, §14). */
+  .tk-paper-lined {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 27px,
+      var(--paper-rule, rgb(10 8 4 / 0.08)) 27px,
+      var(--paper-rule, rgb(10 8 4 / 0.08)) 28px
+    );
+  }
+
+  .tk-paper-grid {
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 19px,
+        var(--paper-rule, rgb(10 8 4 / 0.07)) 19px,
+        var(--paper-rule, rgb(10 8 4 / 0.07)) 20px
+      ),
+      repeating-linear-gradient(
+        to right,
+        transparent 0,
+        transparent 19px,
+        var(--paper-rule, rgb(10 8 4 / 0.07)) 19px,
+        var(--paper-rule, rgb(10 8 4 / 0.07)) 20px
+      );
+  }
+
+  .tk-paper-texture {
+    background-image: radial-gradient(
+      rgb(10 8 4 / 0.035) 0.5px,
+      transparent 0.5px
+    );
+    background-size: 4px 4px;
+  }
+
+  /* Thin vertical rule between open lanes (spec §52). */
+  .tk-lane-divider {
+    background-color: var(--lane-divider);
+  }
+
+  /**
+   * A column panel, tinted by its own accent colour.
+   *
+   * The caller sets `--lane-accent` from `lane.color`; everything else comes
+   * from tokens. Mixing in oklab rather than sRGB keeps the tint from going
+   * muddy when the accent is a saturated hue, and the ratios live in
+   * tokens.css so no component picks its own.
+   */
+  .tk-lane-panel {
+    background-color: color-mix(
+      in oklab,
+      var(--lane-accent, transparent) var(--lane-tint-panel),
+      var(--surface)
+    );
+    border: 1px solid var(--border);
+    border-radius: var(--lane-panel-radius);
+  }
+
+  /* The status pill in a column header, from the same accent. */
+  .tk-lane-pill {
+    background-color: color-mix(
+      in oklab,
+      var(--lane-accent, transparent) var(--lane-tint-header),
+      var(--surface-raised)
+    );
+  }
+
+  /**
+   * The rich editor's block styles (IMPLEMENTATION_PLAN.md §15).
+   *
+   * Sized in `em` throughout, so the same rules serve the 13px card body and
+   * the 14px focus editor without a second scale. Colours come from
+   * `currentColor` rather than a token, because a note's body sits on its own
+   * paper — the ink is whatever that paper's `--paper-*-ink` set.
+   */
+  .tk-prose > * + * {
+    margin-top: 0.5em;
+  }
+
+  .tk-prose h1,
+  .tk-prose h2,
+  .tk-prose h3 {
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  .tk-prose h1 {
+    font-size: 1.4em;
+  }
+
+  .tk-prose h2 {
+    font-size: 1.2em;
+  }
+
+  .tk-prose h3 {
+    font-size: 1.05em;
+  }
+
+  .tk-prose ul,
+  .tk-prose ol {
+    padding-left: 1.25em;
+  }
+
+  .tk-prose ul {
+    list-style: disc;
+  }
+
+  .tk-prose ol {
+    list-style: decimal;
+  }
+
+  .tk-prose li > p {
+    margin: 0;
+  }
+
+  /* Nested lists are a continuation, not a new block. */
+  .tk-prose li > ul,
+  .tk-prose li > ol {
+    margin-top: 0.25em;
+  }
+
+  .tk-prose blockquote {
+    border-left: 2px solid currentColor;
+    padding-left: 0.75em;
+    opacity: 0.8;
+  }
+
+  .tk-prose code {
+    background-color: color-mix(in oklab, currentColor 10%, transparent);
+    border-radius: var(--radius-sm);
+    padding: 0.1em 0.3em;
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+
+  .tk-prose pre {
+    background-color: color-mix(in oklab, currentColor 8%, transparent);
+    border-radius: var(--radius-sm);
+    padding: 0.6em 0.75em;
+    overflow-x: auto;
+  }
+
+  /* A code block already has its own surface; the inline chip would double it. */
+  .tk-prose pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+
+  .tk-prose a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+
+  .tk-prose hr {
+    border: 0;
+    border-top: 1px solid color-mix(in oklab, currentColor 25%, transparent);
+    margin: 0.9em 0;
+  }
+
+  .tk-prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Checklists carry their own bullet — the checkbox. */
+  .tk-prose ul[data-type="taskList"] {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .tk-prose ul[data-type="taskList"] li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5em;
+  }
+
+  .tk-prose ul[data-type="taskList"] li > label {
+    margin-top: 0.15em;
+    user-select: none;
+  }
+
+  .tk-prose ul[data-type="taskList"] li > div {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .tk-prose ul[data-type="taskList"] li[data-checked="true"] > div {
+    opacity: 0.6;
+    text-decoration: line-through;
+  }
+
+  /**
+   * Tiptap's placeholder, shown on the first empty block only.
+   *
+   * `pointer-events: none` matters: without it the hint swallows the click
+   * that was meant to place the caret in an empty note.
+   */
+  .tk-prose p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    opacity: 0.45;
+  }
+
+  .tk-scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+
+  /**
+   * Scrolls, but shows no track. For compact rows inside solid controls where
+   * a visible scrollbar would read as a stray slider.
+   */
+  .tk-scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .tk-scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Coarse pointers get real 44px controls, not invisible overlapping hit areas. */
+@media (pointer: coarse) {
+  button, [role="button"], select, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) { min-height: 44px; }
+  button, [role="button"] { min-width: 44px; }
+  .tk-list-note-row { min-height: 100px; }
+}
+
+@media (pointer: coarse) {
+  .tk-note-header { flex-wrap: wrap; align-items: center; }
+  .tk-note-title { order: -1; flex: 1 0 100%; width: 100%; max-width: 100%; }
+  .tk-note-header > button[role="checkbox"] { position: relative; border: 0; background: transparent; }
+  .tk-note-header > button[role="checkbox"]::before { content: ""; position: absolute; width: 16px; height: 16px; border: 1px solid currentColor; border-radius: var(--radius-sm); opacity: .5; }
+  .tk-note-header > button[aria-checked="true"]::before { background: color-mix(in oklab, currentColor 20%, transparent); }
+  .tk-note-header > button:last-child { margin-left: auto; opacity: .8; }
+  .tk-note-checklist label { min-height: 44px; align-items: center; }
+}

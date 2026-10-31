@@ -1,0 +1,4 @@
+import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@/test/render";
+import { VirtualList } from "./virtual-list";
+describe("large-list windowing",()=>{it("bounds rendered nodes for a thousand records and exposes total size",()=>{const items=Array.from({length:1000},(_,i)=>({id:String(i)}));render(<VirtualList items={items} getKey={(item)=>item.id} renderItem={(item)=><span>Note {item.id}</span>}/>);expect(screen.getAllByRole("listitem").length).toBeLessThan(30);expect(screen.getAllByRole("listitem")[0]).toHaveAttribute("aria-setsize","1000");fireEvent.scroll(screen.getByLabelText("Scrollable notes"),{target:{scrollTop:50000}});expect(screen.queryByText("Note 0")).not.toBeInTheDocument();expect(screen.getAllByRole("listitem").length).toBeLessThan(30);});});
