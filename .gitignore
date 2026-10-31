@@ -45,3 +45,6 @@ next-env.d.ts
 # local logs and scratch
 *.log
 /artifacts/
+
+# documentation is kept local, not published
+*.md
