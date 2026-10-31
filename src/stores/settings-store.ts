@@ -36,11 +36,19 @@ export type BoardSort = (typeof BOARD_SORTS)[number];
 export const CARD_DENSITIES = ["comfortable", "compact"] as const;
 export type CardDensity = (typeof CARD_DENSITIES)[number];
 
+/** How the note editor opens: a panel on the right, a centred card, or the whole page. */
+export const NOTE_PEEK_MODES = ["side", "center", "full"] as const;
+export type NotePeekMode = (typeof NOTE_PEEK_MODES)[number];
+
 export interface SettingsStoreState {
   localBackground: BackgroundSettings | null;
   setLocalBackground: (background: BackgroundSettings | null) => void;
   themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
+
+  /** Remembered across sessions: a user who prefers the full page keeps it. */
+  notePeekMode: NotePeekMode;
+  setNotePeekMode: (mode: NotePeekMode) => void;
 
   /**
    * Board-view settings. Kept separate from the canvas's own settings on
@@ -80,6 +88,7 @@ export interface SettingsStoreState {
 export const SETTINGS_DEFAULTS = {
   localBackground: null,
   themeMode: DEFAULT_THEME_MODE,
+  notePeekMode: "side",
   boardSort: "manual",
   boardShowCompleted: true,
   boardDensity: "comfortable",
@@ -97,6 +106,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
         set({ localBackground });
       },
       setThemeMode: (themeMode) => set({ themeMode }),
+      setNotePeekMode: (notePeekMode) => set({ notePeekMode }),
 
       setBoardSort: (boardSort) => set({ boardSort }),
       setBoardShowCompleted: (boardShowCompleted) => set({ boardShowCompleted }),
@@ -113,7 +123,12 @@ export const useSettingsStore = create<SettingsStoreState>()(
       merge: (saved, current) => {
         if (!saved || typeof saved !== "object") return current;
         const data = saved as Partial<SettingsStoreState>;
-        return { ...current, ...data, localBackground: data.localBackground ? normalizeBackground(data.localBackground) : null };
+        return {
+          ...current,
+          ...data,
+          localBackground: data.localBackground ? normalizeBackground(data.localBackground) : null,
+          notePeekMode: NOTE_PEEK_MODES.find((mode) => mode === data.notePeekMode) ?? current.notePeekMode,
+        };
       },
       // The server cannot read localStorage; `useThemeSync` rehydrates in an
       // effect so the first paint is the server-rendered default theme.

@@ -3,7 +3,7 @@ import { useCanEditBoard } from "@/features/collaboration/access";
 
 import { useDialogFocusReturn } from "@/hooks/use-dialog-focus-return";
 import { dayKey, dueAtForDay, parseDate } from "@/features/calendar/month";
-import { MoreHorizontal, Share2, X } from "lucide-react";
+import { Check, Maximize2, MoreHorizontal, PanelRight, Share2, Square, X, type LucideIcon } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { useCallback, useMemo } from "react";
 
@@ -18,18 +18,34 @@ import { NoteAppearanceControls } from "@/components/notes/note-appearance-contr
 import { NoteCoverControls } from "@/components/notes/note-cover-controls";
 import { RichEditor } from "@/components/notes/rich-editor";
 import { NoteTags } from "@/components/notes/note-tags";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { IconButton } from "@/components/ui/icon-button";
 import { PriorityBadge } from "@/components/ui/priority-badge";
 import { attachmentUrl } from "@/features/attachments/repository";
 import { resolveDocument } from "@/lib/tiptap/document";
 import { resolveNoteAppearance } from "@/lib/note-appearance";
 import { useNoteStore } from "@/stores/note-store";
+import { useSettingsStore, type NotePeekMode } from "@/stores/settings-store";
+import { cn } from "@/lib/utils";
 import { useNoteActions } from "@/features/notes/use-note-actions";
 import { useTaxonomyContext } from "@/features/taxonomy/context";
 import {
   useAttachmentUploads,
   useAttachments,
 } from "@/features/attachments/queries";
+
+/** The three ways the editor can open, as in Notion's "Open as" menu. */
+const PEEK_OPTIONS: readonly { id: NotePeekMode; label: string; icon: LucideIcon }[] = [
+  { id: "side", label: "Side peek", icon: PanelRight },
+  { id: "center", label: "Center peek", icon: Square },
+  { id: "full", label: "Full page", icon: Maximize2 },
+];
 
 export interface NoteFocusDialogProps {
   onShare?: () => void;
@@ -77,6 +93,8 @@ export function NoteFocusDialog({ ownerId = null, beforeHistoryRestore, onHistor
   const setStartAt = useNoteStore((state) => state.setStartAt);
   const setDueAt = useNoteStore((state) => state.setDueAt);
   const collapseNote = useNoteStore((state) => state.collapseNote);
+  const peekMode = useSettingsStore((state) => state.notePeekMode);
+  const setPeekMode = useSettingsStore((state) => state.setNotePeekMode);
 
   const actions = useNoteActions();
   const restoringId = useNoteStore((state)=>state.restoringNoteId);
@@ -125,17 +143,30 @@ export function NoteFocusDialog({ ownerId = null, beforeHistoryRestore, onHistor
   }
 
   const { paperStyle, textureClass } = resolveNoteAppearance(note.appearance);
+  const isSide = peekMode === "side";
+  const isFull = peekMode === "full";
+  const ModeIcon = PEEK_OPTIONS.find((option) => option.id === peekMode)?.icon ?? PanelRight;
   const editable = canEdit && !note.locked && restoringId !== note.id;
 
   return (
-    <Dialog.Root open={open} onOpenChange={(next) => !next && collapseNote()}>
+    // A side peek leaves the board usable beside it, so it is not modal.
+    <Dialog.Root open={open} modal={!isSide} onOpenChange={(next) => !next && collapseNote()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[var(--z-overlay)] bg-surface-sunken/70" />
+        {isSide ? null : <Dialog.Overlay className="fixed inset-0 z-[var(--z-overlay)] bg-surface-sunken/70" />}
 
         <Dialog.Content
           data-testid="note-focus-dialog"
           aria-describedby={undefined}
-          className="fixed inset-0 z-[var(--z-overlay)] flex flex-col p-4 sm:p-8"
+          // The menu that opened this hands focus back to its button. For a
+          // non-modal peek that reads as "focus left", which would close the
+          // panel as it opens; only a click outside should dismiss it.
+          onFocusOutside={(event) => event.preventDefault()}
+          className={cn(
+            "fixed z-[var(--z-overlay)] flex flex-col",
+            isSide && "inset-y-0 right-0 w-full duration-200 data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right motion-reduce:animate-none sm:w-[min(760px,58vw)]",
+            peekMode === "center" && "inset-0 p-4 sm:p-8",
+            isFull && "inset-0",
+          )}
           // Radix would otherwise pull focus to the first focusable element,
           // which is Close. The caret belongs in the note.
           onCloseAutoFocus={focusReturn.onCloseAutoFocus}
@@ -145,10 +176,21 @@ export function NoteFocusDialog({ ownerId = null, beforeHistoryRestore, onHistor
             // Own the complete editor subtree: switching notes (or replacing a
             // legacy duplicate-key tree during Fast Refresh) must not retain
             // another note's editor DOM or version selection.
+            //
+            // The paper itself does not scroll: decorated designs hang rings,
+            // tape and stickers over its edge, and a scrolling element would
+            // clip them. The content scrolls inside it instead.
             key={`focus-paper-${note.id}`}
             style={paperStyle}
-            className={`tk-paper mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-4 overflow-y-auto rounded-[var(--radius-lg)] border p-6 ${textureClass}`}
+            className={cn(
+              "tk-paper flex min-h-0 flex-1 flex-col border p-6",
+              textureClass,
+              peekMode === "center" && "mx-auto w-full max-w-3xl rounded-[var(--radius-lg)]",
+              isSide && "w-full rounded-none border-y-0 border-r-0 shadow-[-14px_0_36px_rgb(10_8_4/0.18)] sm:rounded-l-[var(--radius-lg)] sm:px-8",
+              isFull && "w-full rounded-none border-0 sm:px-[max(2rem,calc((100%-48rem)/2))]",
+            )}
           >
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
             <NoteCover
               coverUrl={note.appearance.coverUrl}
               noteTitle={note.title}
@@ -187,6 +229,22 @@ export function NoteFocusDialog({ ownerId = null, beforeHistoryRestore, onHistor
               }}>
                 <IconButton label="More note actions" disabled={!canEdit || restoringId===note.id} icon={<MoreHorizontal size={16} />} variant="ghost" size="sm" />
               </NoteMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <IconButton label="Change how notes open" icon={<ModeIcon size={16} />} variant="ghost" size="sm" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>Open notes as</DropdownMenuLabel>
+                  {PEEK_OPTIONS.map((option) => (
+                    <DropdownMenuItem key={option.id} onSelect={() => setPeekMode(option.id)}>
+                      <option.icon size={16} aria-hidden="true" />
+                      {option.label}
+                      {peekMode === option.id ? <Check size={14} aria-hidden="true" className="ml-auto" /> : null}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               <Dialog.Close asChild>
                 <IconButton
@@ -281,6 +339,7 @@ export function NoteFocusDialog({ ownerId = null, beforeHistoryRestore, onHistor
                 onRetry={() => void attachments.refetch()}
               />
             ) : null}
+          </div>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

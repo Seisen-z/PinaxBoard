@@ -22,7 +22,6 @@ export const NOTE_STYLES = [
   "tape",
   "clip",
   "pad",
-  "cloud",
   "hand",
   "bunting",
   "floral",

@@ -22,6 +22,18 @@
   position: relative;
 }
 
+/*
+ * Spiral rings, tape, paperclips and stickers hang over the top edge. A lane
+ * or grid cell clips its overflow, so those designs reserve the space
+ * themselves instead of being cut off.
+ */
+.tk-design-spiral,
+.tk-design-tape,
+.tk-design-clip,
+.tk-design-hand {
+  margin-top: 1.25em;
+}
+
 .tk-design::before,
 .tk-design::after {
   content: "";
@@ -147,22 +159,6 @@
   width: 1.7em;
   height: 1.7em;
   background-image: linear-gradient(135deg, transparent 50%, color-mix(in srgb, var(--paper-ink, #333) 16%, transparent) 50%);
-}
-
-/* ---- Cloud: soft blob, stitched edge, ribbon bow ---- */
-.tk-design-cloud {
-  padding: 2.2em 2em 2em;
-  border-radius: 46% 54% 50% 50% / 34% 38% 62% 66%;
-  outline: 0.14em dashed rgb(255 252 244 / 0.85);
-  outline-offset: -0.9em;
-  box-shadow: 0.25em 0.3em 0 var(--d-soft);
-}
-.tk-design-cloud::before {
-  top: -1.1em;
-  right: 22%;
-  width: 3.6em;
-  height: 2.2em;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 36'><path d='M30 18C18 2 2 2 4 18s18 14 26 0z' fill='%23f06fa9'/><path d='M30 18C42 2 58 2 56 18S38 32 30 18z' fill='%23f06fa9'/><path d='M30 18c-6 8-8 14-6 18l6-8 6 8c2-4 0-10-6-18z' fill='%23d9558f'/><circle cx='30' cy='18' r='5' fill='%23ff8dbd'/></svg>");
 }
 
 /* ---- Hand-drawn outline with a bear ---- */

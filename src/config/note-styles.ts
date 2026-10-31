@@ -77,7 +77,6 @@ export const NOTE_STYLE_DEFINITIONS: readonly NoteStyleDefinition[] = [
   { id: "tape", group: "design", label: "Washi tape", textureClass: "tk-design tk-design-tape" },
   { id: "clip", group: "design", label: "Paperclip", textureClass: "tk-design tk-design-clip" },
   { id: "pad", group: "design", label: "Sticky pad", textureClass: "tk-design tk-design-pad" },
-  { id: "cloud", group: "design", label: "Cloud and bow", textureClass: "tk-design tk-design-cloud" },
   { id: "hand", group: "design", label: "Hand-drawn", textureClass: "tk-design tk-design-hand" },
   { id: "bunting", group: "design", label: "Bunting", textureClass: "tk-design tk-design-bunting" },
   { id: "floral", group: "design", label: "Floral", textureClass: "tk-design tk-design-floral" },

@@ -68,6 +68,33 @@ function Tile({ label, ariaLabel, selected, onClick, previewStyle, children }: {
   );
 }
 
+const EFFECT_GROUPS: readonly { title: string; keys: readonly (typeof EFFECTS)[number]["key"][] }[] = [
+  { title: "Adjust", keys: ["brightness", "saturation", "contrast", "opacity"] },
+  { title: "Atmosphere", keys: ["blur", "overlay", "vignette", "grain"] },
+];
+
+function formatEffect(key: string, value: number): string {
+  return key === "blur" ? `${value}px` : `${Math.round(value * 100)}%`;
+}
+
+/** A labelled slider with its value in a pill; the filled track follows the thumb. */
+function EffectSlider({ effect, value, onChange }: { effect: (typeof EFFECTS)[number]; value: number; onChange: (value: number) => void }) {
+  const fill = ((value - effect.min) / (effect.max - effect.min)) * 100;
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="flex items-center justify-between text-sm">
+        <span>{effect.label}</span>
+        <span className="rounded-full bg-surface px-2 py-0.5 text-xs tabular-nums text-muted-foreground">{formatEffect(effect.key, value)}</span>
+      </span>
+      <input
+        aria-label={effect.label} type="range" className="tk-range" style={{ ["--fill" as string]: `${fill}%` }}
+        min={effect.min} max={effect.max} step={effect.step} value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+      />
+    </label>
+  );
+}
+
 function SectionTitle({ children }: { children: ReactNode }) {
   return <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{children}</h3>;
 }
@@ -175,13 +202,13 @@ export function BackgroundCustomizer({ open, onClose, settings, fallback, onChan
                   <div className="mt-3 flex flex-col gap-3">
                     <p className="text-xs text-muted-foreground">Editing these controls replaces the selected preset.</p>
                     <label className="flex items-center justify-between text-sm">Gradient start
-                      <input type="color" aria-label="Gradient start" value={start} onChange={(event) => { setStart(event.target.value); choose("gradient", customGradient(event.target.value, end, angle)); }} />
+                      <input type="color" aria-label="Gradient start" className="tk-swatch" value={start} onChange={(event) => { setStart(event.target.value); choose("gradient", customGradient(event.target.value, end, angle)); }} />
                     </label>
                     <label className="flex items-center justify-between text-sm">Gradient end
-                      <input type="color" aria-label="Gradient end" value={end} onChange={(event) => { setEnd(event.target.value); choose("gradient", customGradient(start, event.target.value, angle)); }} />
+                      <input type="color" aria-label="Gradient end" className="tk-swatch" value={end} onChange={(event) => { setEnd(event.target.value); choose("gradient", customGradient(start, event.target.value, angle)); }} />
                     </label>
                     <label className="flex flex-col gap-1 text-sm">Gradient angle: {angle} degrees
-                      <input type="range" aria-label="Gradient angle" min={0} max={360} value={angle} onChange={(event) => { const next = Number(event.target.value); setAngle(next); choose("gradient", customGradient(start, end, next)); }} />
+                      <input type="range" aria-label="Gradient angle" className="tk-range" style={{ ["--fill" as string]: `${(angle / 360) * 100}%` }} min={0} max={360} value={angle} onChange={(event) => { const next = Number(event.target.value); setAngle(next); choose("gradient", customGradient(start, end, next)); }} />
                     </label>
                   </div>
                 </details>
@@ -229,34 +256,41 @@ export function BackgroundCustomizer({ open, onClose, settings, fallback, onChan
               </section>
             ) : null}
 
-            <details className="rounded-[var(--radius-md)] border border-border p-3">
+            <details className="rounded-[var(--radius-lg)] border border-border bg-surface-sunken/60 p-4">
               <summary className="cursor-pointer text-sm font-medium">Effects</summary>
-              <div className="mt-3 flex flex-col gap-4">
+              <div className="mt-4 flex flex-col gap-6">
                 <div>
                   <SectionTitle>Looks</SectionTitle>
                   <div className="flex flex-wrap gap-1.5">
-                    {EFFECT_LOOKS.map((look) => (
-                      <button
-                        key={look.label} type="button" onClick={() => onChange({ ...settings, ...look.values })}
-                        className="rounded-full border border-border px-3 py-1 text-xs hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-ring"
-                      >{look.label}</button>
-                    ))}
+                    {EFFECT_LOOKS.map((look) => {
+                      const active = (Object.keys(look.values) as (keyof typeof look.values)[]).every((key) => settings[key] === look.values[key]);
+                      return (
+                        <button
+                          key={look.label} type="button" aria-pressed={active} onClick={() => onChange({ ...settings, ...look.values })}
+                          className={cn(
+                            "rounded-full border px-3 py-1 text-xs transition focus-visible:outline-2 focus-visible:outline-ring",
+                            active ? "border-foreground bg-foreground text-background" : "border-border bg-surface hover:bg-surface-raised",
+                          )}
+                        >{look.label}</button>
+                      );
+                    })}
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {EFFECTS.map((effect) => (
-                    <label key={effect.key} className="flex flex-col gap-1 text-xs">
-                      <span className="flex justify-between"><span>{effect.label}</span><span className="tabular-nums text-muted-foreground">{settings[effect.key]}</span></span>
-                      <input
-                        aria-label={effect.label} type="range" min={effect.min} max={effect.max} step={effect.step} value={settings[effect.key]}
-                        onChange={(event) => onChange({ ...settings, [effect.key]: Number(event.target.value) })}
-                      />
-                    </label>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <label className="flex items-center gap-3 text-sm">Tint
-                    <input type="color" aria-label="Tint" value={settings.tint ?? CUSTOM_COLORS.tint} onChange={(event) => onChange({ ...settings, tint: event.target.value })} />
+                {EFFECT_GROUPS.map((group) => (
+                  <div key={group.title}>
+                    <SectionTitle>{group.title}</SectionTitle>
+                    <div className="flex flex-col gap-4">
+                      {group.keys.map((key) => {
+                        const effect = EFFECTS.find((item) => item.key === key)!;
+                        return <EffectSlider key={key} effect={effect} value={settings[key]} onChange={(value) => onChange({ ...settings, [key]: value })} />;
+                      })}
+                    </div>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+                  <label className="flex items-center gap-3 text-sm">
+                    <input type="color" aria-label="Tint" className="tk-swatch" value={settings.tint ?? CUSTOM_COLORS.tint} onChange={(event) => onChange({ ...settings, tint: event.target.value })} />
+                    <span className="flex flex-col"><span>Tint</span><span className="text-xs text-muted-foreground">{settings.tint ?? "Off"}</span></span>
                   </label>
                   <ClayButton size="sm" variant="ghost" onClick={() => onChange({ ...settings, tint: null })}>Remove tint</ClayButton>
                 </div>
