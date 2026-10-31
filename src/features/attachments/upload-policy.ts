@@ -47,7 +47,6 @@ export const BUCKET_POLICIES: Readonly<Record<AttachmentBucket, BucketPolicy>> =
       "image/webp",
       "image/avif",
       "image/gif",
-      "image/svg+xml",
     ],
     label: "image",
   },
@@ -118,6 +117,16 @@ export function validateFile(
   bucket: AttachmentBucket,
 ): ValidationResult {
   const policy = BUCKET_POLICIES[bucket];
+
+  // SVG can carry script. Opened directly from a signed URL it would run on
+  // the storage origin, so it is refused in every bucket, including the
+  // otherwise-unrestricted `attachments`.
+  if (file.type === "image/svg+xml" || /\.svgz?$/i.test(file.name)) {
+    return {
+      ok: false,
+      message: `${file.name} is an SVG, which can run scripts. Export it as PNG or JPEG instead.`,
+    };
+  }
 
   if (file.size <= 0) {
     return { ok: false, message: `${file.name} is empty.` };

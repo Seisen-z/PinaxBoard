@@ -18,10 +18,20 @@ import {
  * and have to be verified against the real database — see `supabase/README.md`.
  */
 
+describe("SVG uploads", () => {
+  it.each(["note-images", "attachments", "covers"] as const)("are refused in %s", (bucket) => {
+    const result = validateFile({ name: "logo.svg", size: 1000, type: "image/svg+xml" }, bucket);
+    expect(result.ok).toBe(false);
+  });
+
+  it("are refused even when the type is missing", () => {
+    expect(validateFile({ name: "logo.SVG", size: 1000, type: "" }, "attachments").ok).toBe(false);
+  });
+});
+
 describe("choosing a bucket", () => {
   it.each([
     ["image/png", "note-images"],
-    ["image/svg+xml", "note-images"],
     ["video/mp4", "note-videos"],
     ["video/quicktime", "note-videos"],
     ["application/pdf", "attachments"],
