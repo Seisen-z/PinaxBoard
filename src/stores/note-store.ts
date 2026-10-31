@@ -10,6 +10,7 @@ import { getNoteStyle } from "@/config/note-styles";
 import { MOCK_BOARD_ID, MOCK_OWNER_ID } from "@/features/board/board-identity";
 import { migrateLocalNotes } from "@/features/notes/legacy-samples";
 import { createBlankNote } from "@/features/notes/create-note";
+import { templateExcerpt, type NoteTemplate } from "@/features/notes/templates";
 import type { Point } from "@/lib/canvas";
 import { fromPlainText, type RichDocument } from "@/lib/tiptap/document";
 import { createId } from "@/lib/utils";
@@ -39,6 +40,8 @@ export interface AddNoteOptions {
   /** Also place the note on the Canvas. */
   onCanvas?: boolean;
   inbox?: boolean;
+  /** Prefill the title, body and colour from a template. */
+  template?: NoteTemplate;
   /** Canvas position. Supplied when creating from the Canvas itself. */
   x?: number;
   y?: number;
@@ -353,6 +356,14 @@ export const useNoteStore = create<NoteStoreState>()(
 
         note.dueAt = options.dueAt ?? null;
         note.startAt = options.startAt ?? null;
+
+        if (options.template) {
+          // Cloned: every note made from a template owns its own document.
+          note.title = options.template.title;
+          note.content = structuredClone(options.template.content);
+          note.excerpt = templateExcerpt(options.template);
+          note.appearance = { ...note.appearance, color: options.template.color };
+        }
 
         set((state) => ({
           notes: [note, ...state.notes],

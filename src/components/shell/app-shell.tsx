@@ -53,6 +53,7 @@ import { useStoreHydration } from "@/hooks/use-store-hydration";
 import { useThemeSync } from "@/hooks/use-theme-sync";
 import { firstLaneId, useLaneStore } from "@/stores/lane-store";
 import { useCanvasStore } from "@/stores/canvas-store";
+import { findNoteTemplate } from "@/features/notes/templates";
 import { LOCAL_BOARD_CONTEXT, useNoteStore } from "@/stores/note-store";
 import type { SessionUser } from "@/features/auth/types";
 import type { BackgroundSettings } from "@/types/board";
@@ -230,6 +231,17 @@ export function AppShell({ background, user = null, onSignOut }: AppShellProps) 
     useNoteStore.getState().addNote(laneId);
   }, [cloudEnabled, dashboardReady, canEdit]);
 
+  /** A note prefilled from a template, opened straight away for editing. */
+  const handleAddNoteFromTemplate = useCallback((templateId: string) => {
+    if (!canEdit || cloudEnabled && !dashboardReady) return;
+    const template = findNoteTemplate(templateId);
+    const laneId = firstLaneId(useLaneStore.getState());
+    if (!template || !laneId) return;
+
+    const id = useNoteStore.getState().addNote(laneId, { template });
+    if (id) useNoteStore.getState().expandNote(id);
+  }, [cloudEnabled, dashboardReady, canEdit]);
+
   const handleAddTimelineNote = useCallback(() => {
     const laneId = firstLaneId(useLaneStore.getState());
     if (!laneId) return;
@@ -350,6 +362,7 @@ export function AppShell({ background, user = null, onSignOut }: AppShellProps) 
           zoom={isCanvas ? canvasZoom : laneZoom}
           onZoomChange={handleZoomChange}
           onResetZoom={handleResetZoom}
+          onAddNoteFromTemplate={handleAddNoteFromTemplate}
           onAddNote={isCanvas ? handleAddCanvasNote : activeView === "calendar" ? handleAddCalendarNote : activeView === "timeline" ? handleAddTimelineNote : handleAddNote}
           onFitToContent={handleFitToContent}
           onAddCanvasNote={handleAddCanvasNote}
