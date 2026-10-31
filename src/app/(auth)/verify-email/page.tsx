@@ -6,7 +6,7 @@ import { verifySignupCodeAction, resendSignupCodeAction, changeSignupEmailAction
 import { getPendingSignup } from "@/features/auth/pending-signup";
 import { getSessionUser } from "@/features/auth/session";
 
-export const metadata: Metadata = { title: "Verify your email · Tackly" };
+export const metadata: Metadata = { title: "Verify your email · Pinax Board" };
 
 export default async function VerifyEmailPage() {
   if (await getSessionUser()) redirect("/");

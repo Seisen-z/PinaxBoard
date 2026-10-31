@@ -7,7 +7,7 @@ import { DEFAULT_THEME_MODE, getTheme } from "@/config/themes";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Tackly",
+  title: "Pinax Board",
   icons: { icon: [{ url: "/brand/tackly-mark.svg", type: "image/svg+xml" }] },
   description:
     "A customizable to-do, sticky-note and digital notebook workspace.",

@@ -52,7 +52,7 @@ export function useReminders(notes: readonly Note[], scope: string, onOpenNote: 
         for (const receipt of items) {
           if (receipt.read || receipt.browser !== "pending" || !dueKeys.has(receipt.key)) continue;
           try {
-            const notification = new Notification("Tackly reminder", { body: receipt.title, tag: receipt.key });
+            const notification = new Notification("Pinax Board reminder", { body: receipt.title, tag: receipt.key });
             notification.onclick = () => { notification.close(); if (active.current === key) { window.focus(); onOpenNote(receipt.noteId); } };
             notifications.current.push(notification);
             receipt.browser = "sent";

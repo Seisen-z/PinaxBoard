@@ -16,7 +16,7 @@ export function ReminderCenter(props: ReminderCenterProps) {
     <Dialog.Overlay className="fixed inset-0 z-[var(--z-overlay)] bg-surface-sunken/70" />
     <Dialog.Content {...focusReturn} aria-describedby="reminders-description" className="fixed inset-x-4 top-16 z-[var(--z-overlay)] mx-auto max-h-[80dvh] max-w-lg overflow-y-auto rounded-[var(--radius-lg)] border border-border bg-surface p-5">
       <Dialog.Title className="text-lg font-semibold">Reminders</Dialog.Title>
-      <p id="reminders-description" className="mt-1 text-xs text-muted-foreground">Current-board reminders are checked while Tackly is open. Closed-page push and email are not enabled.</p>
+      <p id="reminders-description" className="mt-1 text-xs text-muted-foreground">Current-board reminders are checked while Pinax Board is open. Closed-page push and email are not enabled.</p>
       <p className="my-3 text-sm">{props.permission === "granted" ? "Browser notifications enabled." : props.permission === "denied" ? "Browser notifications blocked. Change this site's browser settings to enable them." : props.permission === "unsupported" ? "Browser notifications are unavailable here. In-app reminders still work." : "Browser notifications are off until you enable them."}</p>
       {props.permission === "default" ? <ClayButton size="sm" onClick={props.onEnableBrowser}>Enable browser notifications</ClayButton> : null}
       {props.error ? <p role="alert" className="mt-3 text-sm">{props.error} <button type="button" onClick={props.onRetry}>Retry reminders</button></p> : null}

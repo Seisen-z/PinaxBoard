@@ -33,6 +33,6 @@ export function NoteScheduleControls({ note, ownerId }: { note: Note; ownerId: s
       </select>
     </label>
     <p className="text-xs text-current/60">{!note.dueAt ? "Set a due date to enable repeat." : rule?.nextId ? "The next occurrence has already been created." : next ? `Completing this note creates one next occurrence: ${next.toLocaleString()}.` : "Repeat creates the next note when you complete this one."}</p>
-    <p className="text-xs text-current/60">Reminders are checked while Tackly is open. Browser alerts require your permission; in-app reminders remain available.</p>
+    <p className="text-xs text-current/60">Reminders are checked while Pinax Board is open. Browser alerts require your permission; in-app reminders remain available.</p>
   </fieldset>;
 }

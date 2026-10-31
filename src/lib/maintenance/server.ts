@@ -28,7 +28,7 @@ export function startDailyHealthCheck(): void {
   });
   const attempt = () => { void run().catch(() => {
     // Never log credentials, response bodies, or user data.
-    console.error("[Tackly] Daily database health check failed; retrying in one hour.");
+    console.error("[Pinax Board] Daily database health check failed; retrying in one hour.");
   }); };
   globalHealth.tacklyHealthTimer = setInterval(attempt, HEALTH_INTERVAL_MS);
   globalHealth.tacklyHealthTimer.unref();

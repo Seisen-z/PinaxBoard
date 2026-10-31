@@ -7,7 +7,7 @@ import { signUpAction } from "@/features/auth/actions";
 import { getSessionUser } from "@/features/auth/session";
 import { isSupabaseConfigured } from "@/lib/env";
 
-export const metadata: Metadata = { title: "Create an account · Tackly" };
+export const metadata: Metadata = { title: "Create an account · Pinax Board" };
 
 const NOT_CONFIGURED =
   "This instance has no Supabase project connected yet, so accounts are " +

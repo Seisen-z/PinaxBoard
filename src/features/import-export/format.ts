@@ -146,7 +146,7 @@ function parseJson(text: string): ImportDraft {
   try { value = JSON.parse(text); } catch { throw new Error("This JSON file is invalid. Nothing was imported."); }
   const object = isRecord(value) ? value : null;
   const rawNotes = Array.isArray(value) ? value : object?.format === BACKUP_FORMAT && object.version === BACKUP_VERSION && Array.isArray(object.notes) ? object.notes : null;
-  if (!rawNotes) throw new Error("JSON must be a Tackly backup or an array of notes.");
+  if (!rawNotes) throw new Error("JSON must be a Pinax Board backup or an array of notes.");
   const lanes = object && Array.isArray(object.lanes) ? object.lanes.flatMap(validateLane) : [];
   if (new Set(lanes.map((lane) => lane.id)).size !== lanes.length) throw new Error("Duplicate column IDs in backup.");
   if (rawNotes.length > MAX_IMPORT_NOTES || !rawNotes.length) throw new Error("Import between 1 and 5000 notes at a time.");

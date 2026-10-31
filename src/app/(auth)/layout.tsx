@@ -22,7 +22,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
         className="relative z-[var(--z-board)] flex items-center gap-2.5 text-lg font-semibold tracking-tight"
       >
         <TacklyMark size={44} />
-        Tackly
+        Pinax Board
       </Link>
 
       <div className="relative z-[var(--z-board)] flex w-full justify-center">

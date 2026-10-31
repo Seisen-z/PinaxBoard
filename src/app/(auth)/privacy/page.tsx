@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Privacy · Tackly" };
+export const metadata: Metadata = { title: "Privacy · Pinax Board" };
 
 const CONTACT = "tackly.no@gmail.com";
 
@@ -32,7 +32,7 @@ export default function PrivacyPage() {
       <section>
         <h2 className="font-medium">Without an account</h2>
         <p className="mt-1">
-          If you use Tackly without signing in, your notes are stored only in
+          If you use Pinax Board without signing in, your notes are stored only in
           your browser (local storage) and are never sent to us.
         </p>
       </section>
