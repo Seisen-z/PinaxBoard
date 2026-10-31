@@ -32,7 +32,7 @@ export default async function LoginPage() {
         </Link>
       </p>
 
-      <Link href="/" className="text-xs text-muted-foreground underline">
+      <Link href="/app" className="text-xs text-muted-foreground underline">
         Continue without an account
       </Link>
       <p className="text-xs text-muted-foreground">

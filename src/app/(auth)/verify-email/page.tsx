@@ -16,6 +16,6 @@ export default async function VerifyEmailPage() {
     <VerifyEmailForm email={pending.email} initialRetryAfterSeconds={pending.retryAfterSeconds}
       verifyAction={verifySignupCodeAction} resendAction={resendSignupCodeAction} changeEmailAction={changeSignupEmailAction} />
     <p className="text-xs text-muted-foreground">Already verified? <Link href="/login" className="font-medium text-foreground underline">Sign in</Link></p>
-    <Link href="/" className="text-xs text-muted-foreground underline">Continue without an account</Link>
+    <Link href="/app" className="text-xs text-muted-foreground underline">Continue without an account</Link>
   </div>;
 }
