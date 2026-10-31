@@ -1,25 +1,21 @@
 "use client";
 
-import { ChevronDown, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { BoardControls } from "@/components/board/board-controls";
 import { BoardFilterMenu } from "@/components/board/board-filter-menu";
 import { ViewSwitcher } from "@/components/board/view-switcher";
 import { ZoomControls } from "@/components/board/zoom-controls";
 import { CanvasControls } from "@/components/canvas/canvas-controls";
+import { NewNoteMenu } from "@/components/notes/new-note-menu";
 import { ClayButton } from "@/components/ui/clay-button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { SurfacePanel } from "@/components/ui/surface-panel";
 import { type BoardViewId } from "@/config/layouts";
-import { NOTE_TEMPLATES } from "@/features/notes/templates";
 import { cn } from "@/lib/utils";
+
+/** Surfaces where a note is simply added to the first column. */
+const TEMPLATE_VIEWS: readonly BoardViewId[] = ["board", "grid", "list"];
 
 export interface BoardToolbarProps {
   activeView: BoardViewId;
@@ -33,7 +29,7 @@ export interface BoardToolbarProps {
   onResetZoom: () => void;
   /** Creates a blank note on the active surface. */
   onAddNote: () => void;
-  /** Creates a note prefilled from a template. Hidden on the Canvas. */
+  /** Creates a note prefilled from a template. Board, Grid and List only. */
   onAddNoteFromTemplate?: (templateId: string) => void;
   /** Frames every canvas note in the viewport. Canvas only. */
   onFitToContent: () => void;
@@ -108,32 +104,14 @@ export function BoardToolbar({
           onResetZoom={onResetZoom}
         /> : null}
 
-        <div className="flex items-center gap-1">
+        {onAddNoteFromTemplate && TEMPLATE_VIEWS.includes(activeView) ? (
+          <NewNoteMenu disabled={!canAddNote} onBlank={onAddNote} onTemplate={onAddNoteFromTemplate} />
+        ) : (
           <ClayButton variant="primary" size="sm" disabled={!canAddNote} onClick={onAddNote}>
             <Plus size={15} aria-hidden="true" />
             New note
           </ClayButton>
-          {onAddNoteFromTemplate && !isCanvas ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <ClayButton variant="secondary" size="sm" disabled={!canAddNote} aria-label="New note from a template">
-                  <ChevronDown size={15} aria-hidden="true" />
-                </ClayButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel>New note from a template</DropdownMenuLabel>
-                {NOTE_TEMPLATES.map((template) => (
-                  <DropdownMenuItem key={template.id} onSelect={() => onAddNoteFromTemplate(template.id)}>
-                    <span className="flex flex-col">
-                      <span className="font-medium">{template.label}</span>
-                      <span className="text-xs text-muted-foreground">{template.description}</span>
-                    </span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
-        </div>
+        )}
       </div>
     </SurfacePanel>
   );

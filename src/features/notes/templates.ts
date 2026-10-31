@@ -8,8 +8,11 @@ import type { NoteColorId } from "@/types/note";
  * note is an ordinary note: nothing links it back to the template, and every
  * property stays editable ("create first, customize afterward").
  */
+export type TemplateGroup = "Lists" | "Planning" | "Writing";
+
 export interface NoteTemplate {
   id: string;
+  group: TemplateGroup;
   label: string;
   description: string;
   title: string;
@@ -42,6 +45,7 @@ const doc = (...content: DocumentNode[]): RichDocument => ({ type: "doc", conten
 export const NOTE_TEMPLATES: readonly NoteTemplate[] = [
   {
     id: "checklist",
+    group: "Lists",
     label: "Checklist",
     description: "A list of tickable items",
     title: "Checklist",
@@ -50,6 +54,7 @@ export const NOTE_TEMPLATES: readonly NoteTemplate[] = [
   },
   {
     id: "meeting",
+    group: "Writing",
     label: "Meeting notes",
     description: "Agenda, notes and action items",
     title: "Meeting notes",
@@ -66,6 +71,7 @@ export const NOTE_TEMPLATES: readonly NoteTemplate[] = [
   },
   {
     id: "weekly-plan",
+    group: "Planning",
     label: "Weekly plan",
     description: "Priorities and a task list for the week",
     title: "Week of ",
@@ -81,6 +87,7 @@ export const NOTE_TEMPLATES: readonly NoteTemplate[] = [
   },
   {
     id: "shopping",
+    group: "Lists",
     label: "Shopping list",
     description: "Items to buy",
     title: "Shopping list",
@@ -89,6 +96,7 @@ export const NOTE_TEMPLATES: readonly NoteTemplate[] = [
   },
   {
     id: "project",
+    group: "Planning",
     label: "Project brief",
     description: "Goal, scope, milestones and risks",
     title: "Project brief",
@@ -104,7 +112,90 @@ export const NOTE_TEMPLATES: readonly NoteTemplate[] = [
       bullets([""]),
     ),
   },
+  {
+    id: "reading",
+    group: "Lists",
+    label: "Reading list",
+    description: "Books and articles to get to",
+    title: "Reading list",
+    color: "pink",
+    content: doc(
+      heading("To read"),
+      tasks(["", "", ""]),
+      heading("Finished"),
+      bullets(["Title, author: one-line takeaway"]),
+    ),
+  },
+  {
+    id: "trip",
+    group: "Planning",
+    label: "Trip plan",
+    description: "Dates, bookings, packing and budget",
+    title: "Trip to ",
+    color: "blue",
+    content: doc(
+      paragraph("Dates and who is going: "),
+      heading("Bookings"),
+      tasks(["Flights", "Stay", "Transport"]),
+      heading("Itinerary"),
+      bullets(["Day 1: ", "Day 2: "]),
+      heading("Packing"),
+      tasks(["", "", ""]),
+      heading("Budget"),
+      paragraph("Total so far: "),
+    ),
+  },
+  {
+    id: "journal",
+    group: "Writing",
+    label: "Daily journal",
+    description: "Gratitude, highlights and tomorrow",
+    title: "Journal",
+    color: "cream",
+    content: doc(
+      heading("Three good things"),
+      bullets(["", "", ""]),
+      heading("What happened"),
+      paragraph(),
+      heading("Tomorrow"),
+      tasks(["", ""]),
+    ),
+  },
+  {
+    id: "study",
+    group: "Writing",
+    label: "Study notes",
+    description: "Key ideas, questions and a summary",
+    title: "Study notes: ",
+    color: "mint",
+    content: doc(
+      paragraph("Topic and source: "),
+      heading("Key ideas"),
+      bullets(["", ""]),
+      heading("Questions to follow up"),
+      tasks(["", ""]),
+      heading("Summary in my own words"),
+      paragraph(),
+    ),
+  },
+  {
+    id: "brainstorm",
+    group: "Writing",
+    label: "Brainstorm",
+    description: "Ideas first, then pick what to try",
+    title: "Brainstorm: ",
+    color: "yellow",
+    content: doc(
+      paragraph("The question: "),
+      heading("Ideas"),
+      bullets(["", "", "", ""]),
+      heading("Best options"),
+      tasks(["", ""]),
+    ),
+  },
 ];
+
+export const TEMPLATE_GROUPS: readonly TemplateGroup[] = ["Lists", "Planning", "Writing"];
 
 export function findNoteTemplate(id: string): NoteTemplate | undefined {
   return NOTE_TEMPLATES.find((template) => template.id === id);
