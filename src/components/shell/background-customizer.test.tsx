@@ -39,7 +39,11 @@ function Harness({ activeBoard = null }: { activeBoard?: Board | null }) {
       busy={bg.busy} cloud={Boolean(activeBoard)} onChange={bg.change} onSave={bg.save}
       onClose={() => { bg.cancel(); setOpen(false); }} /></>;
 }
-function type(value: string) { fireEvent.change(screen.getByLabelText("Background type"), { target: { value } }); }
+const TAB_NAMES: Record<string, string> = { solid: "Colors", gradient: "Gradients", pattern: "Patterns", image: "Scenes" };
+/** Opens a gallery tab. Choosing a look is a separate click, so a tab never changes the board by itself. */
+function type(value: string) { fireEvent.click(screen.getByRole("tab", { name: TAB_NAMES[value] ?? value })); }
+/** The old "Solid" type switched to sand by itself; now it is an explicit choice. */
+function pickSand() { type("solid"); fireEvent.click(screen.getByRole("button", { name: "sand background" })); }
 function imageCss() { return screen.getByTestId("app-background").style.getPropertyValue("--bg-image"); }
 function colorCss() { return screen.getByTestId("app-background").style.getPropertyValue("--bg-color"); }
 
@@ -75,6 +79,7 @@ describe("background customization", () => {
   });
   it("previews both built-in image assets and wraps their paths as CSS URLs", () => {
     render(<Harness />); type("image");
+    fireEvent.click(screen.getByRole("button", { name: "Quiet hills" }));
     expect(imageCss()).toBe('url("/backgrounds/hills.svg")');
     fireEvent.click(screen.getByRole("button", { name: "Evening dunes" }));
     expect(imageCss()).toBe('url("/backgrounds/dunes.svg")');
@@ -111,7 +116,7 @@ describe("background customization", () => {
     expect(imageCss()).toBe(before);
   });
   it("keeps failed local saves as drafts and supports retry", async () => {
-    render(<Harness />); type("solid");
+    render(<Harness />); pickSand();
     const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("Full"); });
     fireEvent.click(screen.getByRole("button", { name: "Save background" }));
     await screen.findByRole("alert"); spy.mockRestore();
@@ -140,7 +145,7 @@ describe("background customization", () => {
     let finish = () => {};
     vi.mocked(saveBoardBackground).mockImplementation(() => new Promise<void>((resolve) => { finish = resolve; }));
     const ui = (activeBoard: Board) => <QueryClientProvider client={client}><Harness activeBoard={activeBoard} /></QueryClientProvider>;
-    const view = render(ui(a)); type("solid");
+    const view = render(ui(a)); pickSand();
     fireEvent.click(screen.getByRole("button", { name: "Save background" }));
     await waitFor(() => expect(saveBoardBackground).toHaveBeenCalledWith("a", expect.objectContaining({ type: "solid" })));
     view.rerender(ui(b));
@@ -151,7 +156,7 @@ describe("background customization", () => {
     expect(cached?.find((item) => item.id === "b")?.background).toEqual(DEFAULT_BACKGROUND);
   });
   it("retains custom backgrounds while toggling and persisting only light/dark", async () => {
-    render(<Harness />); type("solid");
+    render(<Harness />); pickSand();
     fireEvent.click(screen.getByRole("button", { name: "Save background" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Switch to dark mode" }));
@@ -163,7 +168,7 @@ describe("background customization", () => {
     render(<AppShell />);
     fireEvent.click(screen.getByRole("button", { name: "Customize background" }));
     expect(screen.getByRole("dialog", { name: "Background" })).toBeInTheDocument();
-    type("solid"); expect(colorCss()).toBe("var(--desk-sand)");
+    pickSand(); expect(colorCss()).toBe("var(--desk-sand)");
     expect(screen.queryByRole("button", { name: "Kanban" })).not.toBeInTheDocument();
   });
 });

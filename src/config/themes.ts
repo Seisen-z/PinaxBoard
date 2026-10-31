@@ -1,3 +1,4 @@
+import { patternSize } from "@/config/background-presets";
 import type { BackgroundSettings } from "@/types/board";
 
 /**
@@ -118,6 +119,7 @@ export function backgroundToCssVariables(
     "--bg-image": background.type === "solid" ? "none"
       : background.type === "image" ? (background.source ? `url(${JSON.stringify(background.source)})` : "none")
       : background.source ?? "none",
+    "--bg-size": background.type === "pattern" ? patternSize(background.source) : "cover",
     "--bg-color": background.type === "solid" ? background.source ?? "transparent" : "transparent",
     "--bg-blur": `${background.blur}px`,
     "--bg-brightness": String(background.brightness),

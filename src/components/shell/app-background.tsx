@@ -36,7 +36,7 @@ export function AppBackground({ settings }: AppBackgroundProps) {
       <div
         data-testid="app-background-layer"
         className="tk-background-layer absolute -inset-16 bg-cover bg-center"
-        style={{ backgroundImage: "var(--bg-image)", backgroundColor: "var(--bg-color)" }}
+        style={{ backgroundImage: "var(--bg-image)", backgroundColor: "var(--bg-color)", backgroundSize: "var(--bg-size, cover)" }}
       />
 
       {/* Darkening overlay — keeps paper notes the brightest thing on screen. */}

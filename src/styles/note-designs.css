@@ -37,7 +37,7 @@
   border-radius: 0.5em;
   outline: 0.12em dashed var(--d-line);
   outline-offset: -0.6em;
-  box-shadow: 0.3em 0.35em 0 var(--d-soft), 0.5em 0.6em 1em color-mix(in srgb, #000 10%, transparent);
+  box-shadow: 0.3em 0.35em 0 var(--d-soft), 0.5em 0.6em 1em rgb(10 8 4 / 0.1);
 }
 .tk-design-spiral::before {
   top: -0.75em;
@@ -61,7 +61,7 @@
   border-radius: 1.2em;
   outline: 0.14em dashed var(--d-line);
   outline-offset: -0.65em;
-  box-shadow: 0 0.2em 0.9em color-mix(in srgb, #000 12%, transparent);
+  box-shadow: 0 0.2em 0.9em rgb(10 8 4 / 0.12);
 }
 
 /* ---- Wave header with a leaf ---- */
@@ -98,7 +98,7 @@
   height: 1.9em;
   transform: translateX(-50%) rotate(-2.5deg);
   background-color: color-mix(in srgb, var(--d-accent) 55%, transparent);
-  background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / 0.5) 0 0.35em, transparent 0.35em 0.7em);
+  background-image: repeating-linear-gradient(135deg, rgb(255 252 244 / 0.5) 0 0.35em, transparent 0.35em 0.7em);
   background-size: auto;
   clip-path: polygon(0 0, 100% 0, 98% 20%, 100% 40%, 98% 60%, 100% 80%, 98% 100%, 0 100%, 2% 80%, 0 60%, 2% 40%, 0 20%);
 }
@@ -128,10 +128,10 @@
   inset: 0;
   background-size: auto;
   background-image:
-    radial-gradient(circle at 0.7em 0.7em, #fff 0 0.26em, transparent 0.3em),
-    radial-gradient(circle at calc(100% - 0.7em) 0.7em, #fff 0 0.26em, transparent 0.3em),
-    radial-gradient(circle at 0.7em calc(100% - 0.7em), #fff 0 0.26em, transparent 0.3em),
-    radial-gradient(circle at calc(100% - 0.7em) calc(100% - 0.7em), #fff 0 0.26em, transparent 0.3em);
+    radial-gradient(circle at 0.7em 0.7em, #fffcf4 0 0.26em, transparent 0.3em),
+    radial-gradient(circle at calc(100% - 0.7em) 0.7em, #fffcf4 0 0.26em, transparent 0.3em),
+    radial-gradient(circle at 0.7em calc(100% - 0.7em), #fffcf4 0 0.26em, transparent 0.3em),
+    radial-gradient(circle at calc(100% - 0.7em) calc(100% - 0.7em), #fffcf4 0 0.26em, transparent 0.3em);
 }
 
 /* ---- Sticky pad: hard offset shadow and a peeled corner ---- */
@@ -139,7 +139,7 @@
   padding: 1.4em 1.4em 1.8em;
   border-radius: 0.15em;
   border-color: transparent !important;
-  box-shadow: 0.6em 0.6em 0 var(--d-soft), 0.7em 0.8em 1.2em color-mix(in srgb, #000 8%, transparent);
+  box-shadow: 0.6em 0.6em 0 var(--d-soft), 0.7em 0.8em 1.2em rgb(10 8 4 / 0.08);
 }
 .tk-design-pad::after {
   right: 0;
@@ -153,7 +153,7 @@
 .tk-design-cloud {
   padding: 2.2em 2em 2em;
   border-radius: 46% 54% 50% 50% / 34% 38% 62% 66%;
-  outline: 0.14em dashed rgb(255 255 255 / 0.85);
+  outline: 0.14em dashed rgb(255 252 244 / 0.85);
   outline-offset: -0.9em;
   box-shadow: 0.25em 0.3em 0 var(--d-soft);
 }

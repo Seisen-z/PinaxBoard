@@ -2,19 +2,14 @@ import { DEFAULT_BACKGROUND } from "@/config/themes";
 import type { BackgroundSettings } from "@/types/board";
 
 export const BACKGROUND_KINDS = ["solid", "gradient", "image", "pattern"] as const;
-export const BACKGROUND_SWATCHES = ["sand", "sage", "clay", "slate"] as const;
-export const BUILTIN_BACKGROUNDS = [
-  { id: "hills", label: "Quiet hills", source: "/backgrounds/hills.svg" },
-  { id: "dunes", label: "Evening dunes", source: "/backgrounds/dunes.svg" },
-] as const;
-export const PATTERNS = [
-  { label: "Pinstripe", source: "repeating-linear-gradient(90deg, var(--desk-sand) 0 2px, var(--desk-clay) 2px 24px)" },
-  { label: "Graph paper", source: "repeating-linear-gradient(0deg, transparent 0 23px, var(--desk-slate) 23px 24px), repeating-linear-gradient(90deg, var(--desk-sand) 0 23px, var(--desk-slate) 23px 24px)" },
-] as const;
-export const GRADIENTS = [
-  { label: "Warm horizon", source: "linear-gradient(135deg, var(--desk-sand), var(--desk-clay))" },
-  { label: "Garden shade", source: "linear-gradient(155deg, var(--desk-sage), var(--desk-slate))" },
-] as const;
+export {
+  BUILTIN_BACKGROUNDS,
+  EFFECT_LOOKS,
+  GRADIENTS,
+  PATTERNS,
+  SOLID_COLORS,
+  patternSize,
+} from "@/config/background-presets";
 /** Editable native color-input defaults, not component styling. */
 export const CUSTOM_COLORS = { start: "#d4c4a3", end: "#8faaa0", tint: "#c3a17e" } as const;
 export const EFFECTS = [
