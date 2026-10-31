@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import {
@@ -73,6 +74,22 @@ async function checkOtpLimit(email: string, kind: "send" | "verify"): Promise<Au
   }
 }
 
+/**
+ * The caller's address, for per-IP abuse limits. Only meaningful behind a
+ * proxy that sets `x-forwarded-for` and strips client-supplied values (Vercel
+ * does); on a bare server the header is spoofable, so a missing or malformed
+ * value just skips the per-IP limit and the per-email limit still applies.
+ */
+async function clientIp(): Promise<string | null> {
+  try {
+    const list = await headers();
+    const raw = list.get("x-forwarded-for")?.split(",")[0]?.trim() ?? list.get("x-real-ip")?.trim();
+    return raw && /^[0-9a-fA-F:.]{3,45}$/.test(raw) ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function signInAction(
   _previous: AuthFormState,
   formData: FormData,
@@ -125,6 +142,13 @@ export async function signUpAction(
 
   if (!parsed.success) {
     return { status: "error", fieldErrors: toFieldErrors(parsed.error) };
+  }
+
+  // A single address cannot mass-create accounts or burn the email quota.
+  const ip = await clientIp();
+  if (ip) {
+    const ipLimited = await checkOtpLimit(`ip:${ip}`, "send");
+    if (ipLimited) return ipLimited;
   }
 
   const limited = await checkOtpLimit(parsed.data.email, "send");

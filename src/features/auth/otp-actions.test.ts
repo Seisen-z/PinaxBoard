@@ -2,8 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mock = vi.hoisted(() => ({
   configured: vi.fn(() => true), redirect: vi.fn((path: string): never => { throw new Error(`redirect:${path}`); }),
   revalidate: vi.fn(), pending: vi.fn(), setPending: vi.fn(), clearPending: vi.fn(), limit: vi.fn(),
-  signUp: vi.fn(), signIn: vi.fn(), verify: vi.fn(), resend: vi.fn(), signOut: vi.fn(),
+  signUp: vi.fn(), signIn: vi.fn(), verify: vi.fn(), resend: vi.fn(), signOut: vi.fn(), headers: vi.fn((): Record<string, string> => ({})),
 }));
+vi.mock("next/headers", () => ({ headers: async () => new Headers(mock.headers()) }));
 vi.mock("next/navigation", () => ({ redirect: mock.redirect }));
 vi.mock("next/cache", () => ({ revalidatePath: mock.revalidate }));
 vi.mock("@/lib/env", () => ({ isSupabaseConfigured: mock.configured }));
@@ -23,6 +24,22 @@ beforeEach(() => {
   mock.signUp.mockResolvedValue({ data: { session: null }, error: null });
   mock.verify.mockResolvedValue({ data: { session: { access_token: "fixture" } }, error: null });
   mock.resend.mockResolvedValue({ error: null });
+});
+describe("per-IP signup limit", () => {
+  it("limits by forwarded address before the per-email limit", async () => {
+    mock.headers.mockReturnValue({ "x-forwarded-for": "203.0.113.9, 10.0.0.1" });
+    mock.limit.mockResolvedValueOnce({ allowed: false, retryAfterSeconds: 300 });
+    const result = await signUpAction(idle, form({ email: "sam@example.com", password: "long-password" }));
+    expect(result.status).toBe("error");
+    expect(mock.limit).toHaveBeenCalledWith("ip:203.0.113.9", "send");
+    expect(mock.signUp).not.toHaveBeenCalled();
+  });
+  it("skips the IP limit when no usable address is present", async () => {
+    mock.headers.mockReturnValue({ "x-forwarded-for": "not an ip!" });
+    await expect(signUpAction(idle, form({ email: "sam@example.com", password: "long-password" }))).rejects.toThrow("redirect:/verify-email");
+    expect(mock.limit).toHaveBeenCalledTimes(1);
+    expect(mock.limit).toHaveBeenCalledWith("sam@example.com", "send");
+  });
 });
 describe("signup OTP actions", () => {
   it("advances signup to verification without placing password or email in URL", async () => {
