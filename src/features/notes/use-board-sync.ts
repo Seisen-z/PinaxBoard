@@ -101,6 +101,9 @@ export function useBoardSync({
 
   const flushRef = useRef<(() => void) | null>(null);
   const needsRecovery = useRef(false);
+  /** Consecutive failed saves and the earliest time the next attempt may run. */
+  const failures = useRef(0);
+  const retryAfter = useRef(0);
   /** True once the browser actually lost connectivity; only then may recovery fork conflict copies. */
   const offlineSeen = useRef(false);
   const confirmedRef = useRef<BoardContents>({ notes: [], lanes: [] });
@@ -133,6 +136,8 @@ export function useBoardSync({
     if (recoveringRef.current) return;
     if (inFlight.current) { await pendingWrite.current; return; }
 
+    // A save that keeps failing must back off, not refetch and retry every second.
+    if (Date.now() < retryAfter.current) return;
     if (needsRecovery.current && navigator.onLine !== false) { window.dispatchEvent(new Event("online")); return; }
     const diff = buildDiff();
     if (isEmptyDiff(diff)) return;
@@ -175,10 +180,20 @@ export function useBoardSync({
       if (scopeRef.current === key) confirmedRef.current = { notes: [...nextNotes.values()], lanes: [...nextLanes.values()] };
       const latest = readCachedBoard(ownerId, boardId);
       if (latest) writeCachedBoard({ ...latest, baseline: { notes: [...nextNotes.values()], lanes: [...nextLanes.values()] }, pending: !sameRecord(latest.working, { notes: [...nextNotes.values()], lanes: [...nextLanes.values()] }) });
+      failures.current = 0; retryAfter.current = 0;
       if (scopeRef.current === key) setSaved();
+      // Tells collaborators to refetch; see use-board-collaboration (no Postgres Changes polling).
+      window.dispatchEvent(new CustomEvent("tackly:board-saved", { detail: boardId }));
       for(const note of diff.notes.upserts) void client.invalidateQueries({queryKey:queryKeys.noteHistory(note.id,ownerId)});
     } catch (error) {
       needsRecovery.current = true;
+      failures.current += 1;
+      // The first failure retries at once (recovery usually resolves a conflict);
+      // repeated failures back off instead of looping.
+      if (failures.current >= 2) {
+        retryAfter.current = Date.now() + Math.min(60_000, 1_000 * 2 ** Math.min(failures.current, 6));
+        window.setTimeout(() => flushRef.current?.(), retryAfter.current - Date.now() + 50);
+      }
       // Put the failed records back so the next attempt retries them. Dropping
       // them here is how an edit disappears for good.
       if (scopeRef.current === key) {
@@ -301,6 +316,7 @@ export function useBoardSync({
   }, [enabled, boardId, ownerId, recordOwnerId, canWrite, flushNow, setSyncError]);
 
   const retry = useCallback(() => {
+    failures.current = 0; retryAfter.current = 0;
     scheduleFlush.cancel();
     if (navigator.onLine !== false) window.dispatchEvent(new Event("online"));
     else void flushNow();

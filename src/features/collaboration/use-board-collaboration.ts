@@ -53,9 +53,10 @@ export function useBoardCollaboration(boardId: string | null, user: SessionUser 
         if (!parsed.success || parsed.data.session === session) return;
         positions.set(parsed.data.session, { cursor: { ...parsed.data, visible: true }, seen: Date.now() }); schedule();
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "notes", filter: `board_id=eq.${boardId}` }, refresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "lanes", filter: `board_id=eq.${boardId}` }, refresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "board_members", filter: `board_id=eq.${boardId}` }, () => { void client.invalidateQueries({ queryKey: ["board-role", user.id, boardId] }); void client.invalidateQueries({ queryKey: ["board-people", boardId] }); })
+      // Saves announce themselves over Broadcast. Postgres Changes made the
+      // database re-check row security for every subscriber on every write,
+      // which saturated the project's CPU.
+      .on("broadcast", { event: "board-changed" }, refresh)
       .subscribe(status => {
         if (!alive) return; ready = status === "SUBSCRIBED";
         setLive({ boardId, status: ready ? "Live" : status === "CHANNEL_ERROR" || status === "TIMED_OUT" ? "Reconnecting" : "Connecting", cursors: [] });
@@ -84,11 +85,17 @@ export function useBoardCollaboration(boardId: string | null, user: SessionUser 
       schedule();
     }, 4000);
     // Polling closes missed-event gaps and rechecks permission after removal, including DELETE events.
-    const poll = window.setInterval(refresh, 5_000);
+    const poll = window.setInterval(refresh, 30_000);
+    const announce = (event: Event) => {
+      if ((event as CustomEvent<string>).detail === boardId && ready) void channel.send({ type: "broadcast", event: "board-changed", payload: { session } });
+    };
+    window.addEventListener("tackly:board-saved", announce);
+    // Role and member changes no longer arrive as database events.
+    const membership = window.setInterval(() => { void client.invalidateQueries({ queryKey: ["board-people", boardId] }); }, 60_000);
     const onVisible = () => { if (document.visibilityState === "visible") refresh(); };
     document.addEventListener("visibilitychange", onVisible); window.addEventListener("focus", refresh);
     document.addEventListener("pointermove", move);
-    return () => { alive = false; cancelAnimationFrame(frame); document.removeEventListener("pointermove", move); document.removeEventListener("visibilitychange", onVisible); window.removeEventListener("focus", refresh); window.clearInterval(heartbeat); window.clearInterval(poll); void supabase.removeChannel(channel); };
+    return () => { alive = false; cancelAnimationFrame(frame); document.removeEventListener("pointermove", move); document.removeEventListener("visibilitychange", onVisible); window.removeEventListener("focus", refresh); window.clearInterval(heartbeat); window.clearInterval(poll); window.clearInterval(membership); window.removeEventListener("tackly:board-saved", announce); void supabase.removeChannel(channel); };
   }, [boardId, user, role.data, role.error, client]);
   return { role: user ? role.error ? null : role.data ?? null : "owner" as const, loading: Boolean(user && boardId && role.isLoading), error: role.error, retry: () => void role.refetch(), status: live?.boardId === boardId ? live.status : "Connecting", cursors: role.data && !role.error && live?.boardId === boardId ? live.cursors : [] };
 }
