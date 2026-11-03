@@ -37,6 +37,7 @@ export function CalendarWorkspace({ month, selectedDate, onChangeMonth, onSelect
   const grouped = useMemo(() => notesByDay(visibleNotes(notes, filters, showCompleted, sort)), [notes, filters, showCompleted, sort]);
   const categoriesById = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
   const monthLabel = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(month);
+  const overdue = useMemo(() => [...grouped.values()].flat().filter((note) => !note.completed && note.dueAt && new Date(note.dueAt).getTime() < today.getTime()).length, [grouped, today]);
   const count = days.reduce((total, day) => total + (grouped.get(day.key)?.length ?? 0), 0);
 
   return (
@@ -49,6 +50,7 @@ export function CalendarWorkspace({ month, selectedDate, onChangeMonth, onSelect
         <ClayButton size="sm" variant="ghost" onClick={() => { onChangeMonth(startOfMonth(today)); onSelectDate(today); }}>Today</ClayButton>
         <IconButton label="Next month" icon={<ChevronRight size={16} />} onClick={() => onChangeMonth(shiftMonth(month, 1))} />
       </div>
+      <p className="mb-2 text-xs tabular-nums text-muted-foreground" data-testid="calendar-summary">{count} dated {count === 1 ? "note" : "notes"} in view{overdue ? ` · ${overdue} overdue` : ""} · Selected: {longDate(selectedDate)}</p>
       <p className="mb-2 text-xs text-muted-foreground">Select a day to place a new note. Open a note to edit its due date.</p>
       <p className="mb-2 text-xs text-muted-foreground sm:hidden">Scroll horizontally to see all seven days.</p>
       {count === 0 ? <div role="status" className="mb-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">

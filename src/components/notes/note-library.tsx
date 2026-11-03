@@ -17,7 +17,14 @@ export function NoteLibrary({ mode, actorId, onCapture }: { mode: "inbox" | "min
   const notes = useNoteStore(state => state.notes), lanes = useLaneStore(state => state.lanes);
   const [search, setSearch] = useState("");
   const canEdit = useCanEditBoard();
-  const records = useMemo(() => libraryNotes(notes, mode, actorId, search), [notes, mode, actorId, search]);
+  const [status, setStatus] = useState<"all" | "open" | "done">("all");
+  const [order, setOrder] = useState<"recent" | "oldest" | "title">("recent");
+  const base = useMemo(() => libraryNotes(notes, mode, actorId, search), [notes, mode, actorId, search]);
+  const records = useMemo(() => {
+    const filtered = base.filter((note) => status === "all" || (status === "done") === note.completed);
+    const time = (note: Note) => new Date(note.updatedAt).getTime() || 0;
+    return order === "recent" ? filtered : [...filtered].sort(order === "oldest" ? (a, b) => time(a) - time(b) : (a, b) => (a.title || "Untitled").localeCompare(b.title || "Untitled"));
+  }, [base, status, order]);
   const inbox = mode === "inbox";
   const title=mode === "all" ? "All Notes" : "My Notes";
   const renderNote = (note: Note) => <article className="flex flex-wrap items-center gap-3 border-b border-border p-4" data-note-id={note.id}>
@@ -45,6 +52,12 @@ export function NoteLibrary({ mode, actorId, onCapture }: { mode: "inbox" | "min
     <SurfacePanel className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4">
         <label className="flex min-w-0 items-center gap-2 text-sm"><Search size={16} aria-hidden="true" /><input aria-label={inbox ? "Search inbox" : mode === "all" ? "Search all notes" : "Search my notes"} value={search} onChange={event => setSearch(event.target.value)} placeholder="Find a thought…" className="w-full min-w-0 bg-transparent outline-none" /></label>
+        <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Filter by status">
+          {([["all", "All"], ["open", "Open"], ["done", "Done"]] as const).map(([value, label]) => <ClayButton key={value} size="sm" variant="ghost" selected={status === value} onClick={() => setStatus(value)}>{label}</ClayButton>)}
+          <select aria-label="Sort notes" value={order} onChange={event => setOrder(event.target.value as typeof order)} className="min-h-9 rounded-md border border-border bg-surface px-2 text-xs">
+            <option value="recent">Default order</option><option value="oldest">Least recently edited</option><option value="title">Title A–Z</option>
+          </select>
+        </div>
         <span className="text-xs tabular-nums text-muted-foreground">{records.length} {inbox ? "to organize" : records.length === 1 ? "note" : "notes"}</span>
       </div>
       {records.length ? records.length > 100 ? <VirtualList items={records} getKey={getKey} renderItem={renderNote} /> : records.map(note => <div key={note.id}>{renderNote(note)}</div>) :

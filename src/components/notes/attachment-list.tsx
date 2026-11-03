@@ -5,6 +5,7 @@ import {
   File as FileIcon,
   FileText,
   Film,
+  Download,
   Image as ImageIcon,
   Loader2,
   Paperclip,
@@ -15,6 +16,7 @@ import { useCallback, useRef, useState } from "react";
 import { AttachmentPreview } from "@/components/notes/attachment-preview";
 import { ClayButton } from "@/components/ui/clay-button";
 import { IconButton } from "@/components/ui/icon-button";
+import { attachmentDownloadUrl } from "@/features/attachments/repository";
 import { formatBytes } from "@/features/attachments/upload-policy";
 import type { AttachmentUploads } from "@/features/attachments/queries";
 import { cn } from "@/lib/utils";
@@ -231,35 +233,61 @@ function AttachmentRow({
   onRemove,
 }: AttachmentRowProps) {
   const isImage = attachment.mimeType.startsWith("image/");
+  const [downloadError, setDownloadError] = useState(false);
+
+  const download = async () => {
+    setDownloadError(false);
+    try {
+      const url = await attachmentDownloadUrl(attachment);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = attachment.fileName;
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (cause) {
+      console.error("Supabase: could not prepare a download", cause);
+      setDownloadError(true);
+    }
+  };
 
   return (
     <li
       data-testid="attachment-row"
-      className="flex items-center gap-2 rounded-md bg-current/5 px-2 py-1.5 text-xs"
+      className="flex flex-col gap-2 rounded-md bg-current/5 px-2 py-1.5 text-xs"
     >
-      {isImage ? (
-        <AttachmentPreview attachment={attachment} />
-      ) : (
-        <FileGlyph mimeType={attachment.mimeType} />
-      )}
+      <div className="flex items-center gap-2">
+        {isImage ? null : <FileGlyph mimeType={attachment.mimeType} />}
 
-      <span className="min-w-0 flex-1">
-        <span className="block truncate font-medium">{attachment.fileName}</span>
-        <span className="block text-current/55">
-          {formatBytes(attachment.fileSize)}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-medium">{attachment.fileName}</span>
+          <span className={cn("block", downloadError ? "text-danger" : "text-current/55")}>
+            {downloadError ? "Could not download. Retry." : formatBytes(attachment.fileSize)}
+          </span>
         </span>
-      </span>
 
-      {editable ? (
         <IconButton
-          label={`Remove ${attachment.fileName}`}
-          icon={<X size={14} />}
+          label={`Download ${attachment.fileName}`}
+          icon={<Download size={14} />}
           variant="ghost"
           size="sm"
-          disabled={removing}
-          onClick={onRemove}
+          onClick={() => void download()}
         />
-      ) : null}
+
+        {editable ? (
+          <IconButton
+            label={`Remove ${attachment.fileName}`}
+            icon={<X size={14} />}
+            variant="ghost"
+            size="sm"
+            disabled={removing}
+            onClick={onRemove}
+          />
+        ) : null}
+      </div>
+
+      {isImage ? <AttachmentPreview attachment={attachment} size="large" /> : null}
     </li>
   );
 }

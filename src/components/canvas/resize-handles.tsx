@@ -10,14 +10,14 @@ export interface ResizeHandlesProps {
 
 /** Placement and cursor per handle. */
 const HANDLE_STYLES: Record<ResizeHandle, string> = {
-  nw: "-top-1 -left-1 cursor-nwse-resize",
-  n: "-top-1 left-1/2 -translate-x-1/2 cursor-ns-resize",
-  ne: "-top-1 -right-1 cursor-nesw-resize",
-  e: "top-1/2 -right-1 -translate-y-1/2 cursor-ew-resize",
-  se: "-bottom-1 -right-1 cursor-nwse-resize",
-  s: "-bottom-1 left-1/2 -translate-x-1/2 cursor-ns-resize",
-  sw: "-bottom-1 -left-1 cursor-nesw-resize",
-  w: "top-1/2 -left-1 -translate-y-1/2 cursor-ew-resize",
+  nw: "left-0 top-0 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize",
+  n: "left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 cursor-ns-resize",
+  ne: "left-full top-0 -translate-x-1/2 -translate-y-1/2 cursor-nesw-resize",
+  e: "left-full top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize",
+  se: "left-full top-full -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize",
+  s: "left-1/2 top-full -translate-x-1/2 -translate-y-1/2 cursor-ns-resize",
+  sw: "left-0 top-full -translate-x-1/2 -translate-y-1/2 cursor-nesw-resize",
+  w: "left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize",
 };
 
 const HANDLE_LABELS: Record<ResizeHandle, string> = {
@@ -54,11 +54,18 @@ export function ResizeHandles({ onStartResize }: ResizeHandlesProps) {
             onStartResize(handle, event);
           }}
           className={cn(
-            "absolute size-2.5 rounded-[3px] border border-ring bg-surface",
-            "shadow-[0_1px_3px_rgb(10_8_4/0.35)]",
+            // A generous, touch-action:none hit area (44px on touch screens)
+            // around a small visible grip, so a finger or trackpad can grab it
+            // and the browser does not scroll or pan instead of resizing.
+            "group absolute grid size-6 touch-none place-items-center [@media(pointer:coarse)]:size-11",
             HANDLE_STYLES[handle],
           )}
-        />
+        >
+          <span
+            aria-hidden="true"
+            className="size-2.5 rounded-[3px] border border-ring bg-surface shadow-[0_1px_3px_rgb(10_8_4/0.35)] [@media(pointer:coarse)]:size-4"
+          />
+        </button>
       ))}
     </>
   );

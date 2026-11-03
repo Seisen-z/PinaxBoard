@@ -167,3 +167,22 @@ export async function attachmentUrl(attachment: Attachment): Promise<string> {
 
   return data.signedUrl;
 }
+
+/**
+ * A URL that makes the browser save the file instead of showing it.
+ *
+ * Signed with `download` so the response carries a Content-Disposition of the
+ * original file name; a public object is returned as-is, since the `download`
+ * attribute on the link covers it.
+ */
+export async function attachmentDownloadUrl(attachment: Attachment): Promise<string> {
+  if (attachment.publicUrl) return attachment.publicUrl;
+
+  const { data, error } = await getSupabaseBrowserClient().storage
+    .from(attachment.bucket)
+    .createSignedUrl(attachment.storagePath, SIGNED_URL_TTL_SECONDS, { download: attachment.fileName });
+
+  if (error || !data) fail(`download ${attachment.fileName}`, error);
+
+  return data.signedUrl;
+}

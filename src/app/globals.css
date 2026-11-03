@@ -402,3 +402,8 @@
   .tk-note-header > button:last-child { margin-left: auto; opacity: .8; }
   .tk-note-checklist label { min-height: 44px; align-items: center; }
 }
+
+/* Board / canvas fullscreen: the surface alone fills the screen. */
+#main-content:fullscreen {
+  background: var(--background);
+}

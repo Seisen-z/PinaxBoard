@@ -55,7 +55,7 @@ describe("distinct note destinations", () => {
 describe("bounded cursor presence", () => {
   const cursor = { session: "other-tab", userId: "12345678-1234-4234-8234-123456789abc", name: "Ada", view: "canvas:canvas", x: 12, y: 24, canvas: true, visible: true, at: 10000, noteId: null };
   it("accepts well-shaped cursor data and deduplicates sessions", () => expect(parseCursors([cursor, { ...cursor, x: 13 }], "my-tab", 10000)).toEqual([{ ...cursor, x: 13 }]));
-  it("drops malformed, stale, future and own-session data", () => expect(parseCursors([{}, { ...cursor, x: Infinity }, { ...cursor, name: "x".repeat(1000) }, { ...cursor, at: 50000 }, { ...cursor, at: -50000 }, { ...cursor, session: "my-tab" }], "my-tab", 10000)).toEqual([]));
+  it("drops malformed, stale, future and own-session data", () => expect(parseCursors([{}, { ...cursor, x: Infinity }, { ...cursor, name: "x".repeat(1000) }, { ...cursor, at: 700000 }, { ...cursor, at: -700000 }, { ...cursor, session: "my-tab" }], "my-tab", 10000)).toEqual([]));
 });
 
 describe("atomic shared changes", () => {

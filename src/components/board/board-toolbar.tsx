@@ -76,6 +76,7 @@ export function BoardToolbar({
         "flex flex-wrap items-center gap-2 px-4 py-2",
       )}
       style={{ minHeight: "var(--toolbar-height)" }}
+      data-guide="toolbar"
     >
       {showViewSwitcher ? <ViewSwitcher activeView={activeView} onSelectView={onSelectView} /> : <span className="text-sm font-medium capitalize">{activeView} tools</span>}
 
@@ -93,7 +94,7 @@ export function BoardToolbar({
         </>
       )}
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2" data-guide="new-note">
         <span className="hidden text-xs tabular-nums text-muted-foreground sm:inline">
           {noteCount} {noteCount === 1 ? "note" : "notes"}
         </span>

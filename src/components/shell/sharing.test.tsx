@@ -18,7 +18,7 @@ it("creates a bounded invitation link with an explicit role and no automatic acc
   await screen.findByRole("combobox", { name: "Access for Ada" });
   await userEvent.selectOptions(screen.getByRole("combobox", { name: "Permission" }), "editor");
   await userEvent.click(screen.getByRole("button", { name: "Create invitation link" }));
-  await waitFor(() => expect(repo.createInvitation).toHaveBeenCalledWith("board", "editor"));
+  await waitFor(() => expect(repo.createInvitation).toHaveBeenCalledWith("board", "editor", { days: 7, scope: "board" }));
   expect(await screen.findByRole("textbox", { name: "Invitation link" })).toHaveValue(`${location.origin}/#invite=${token}`);
   expect(repo.acceptInvitation).not.toHaveBeenCalled();
 });

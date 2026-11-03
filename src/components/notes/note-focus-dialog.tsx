@@ -1,4 +1,5 @@
 "use client";
+import { storageImageSource } from "@/lib/tiptap/storage-image";
 import { useCanEditBoard } from "@/features/collaboration/access";
 
 import { useDialogFocusReturn } from "@/hooks/use-dialog-focus-return";
@@ -118,7 +119,9 @@ export function NoteFocusDialog({ ownerId = null, beforeHistoryRestore, onHistor
   const handleUploadImages = useCallback(
     async (files: readonly File[]) => {
       const saved = await uploads.upload(files, "note-images");
-      return Promise.all(saved.map(attachmentUrl));
+      return Promise.all(saved.map(async (attachment) => attachment.publicUrl
+        ? attachmentUrl(attachment)
+        : storageImageSource(attachment.bucket, attachment.storagePath)));
     },
     [uploads],
   );

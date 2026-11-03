@@ -6,6 +6,40 @@ import { Placeholder } from "@tiptap/extensions";
 import { StarterKit } from "@tiptap/starter-kit";
 import type { Extensions } from "@tiptap/react";
 
+import { STORAGE_IMAGE_PREFIX, resolveStorageImage } from "@/lib/tiptap/storage-image";
+
+/**
+ * Image that understands `tackly-storage://bucket/path` sources. The document
+ * stores the permanent object path; a signed URL is made when it is drawn, so
+ * the image still loads after the signed URL it was uploaded with has expired.
+ */
+const StorageImage = Image.extend({
+  addNodeView() {
+    return ({ node }) => {
+      const img = document.createElement("img");
+      let current = "";
+      const apply = (src: string, alt: string | null | undefined, title: string | null | undefined) => {
+        if (alt) img.alt = alt; else img.removeAttribute("alt");
+        if (title) img.title = title; else img.removeAttribute("title");
+        if (src === current) return;
+        current = src;
+        if (!src.startsWith(STORAGE_IMAGE_PREFIX)) { img.src = src; return; }
+        img.removeAttribute("src");
+        void resolveStorageImage(src).then((url) => { if (current === src && url) img.src = url; });
+      };
+      apply(String(node.attrs.src ?? ""), node.attrs.alt as string | null, node.attrs.title as string | null);
+      return {
+        dom: img,
+        update: (next) => {
+          if (next.type !== node.type) return false;
+          apply(String(next.attrs.src ?? ""), next.attrs.alt as string | null, next.attrs.title as string | null);
+          return true;
+        },
+      };
+    };
+  },
+});
+
 /**
  * The editor's block vocabulary (IMPLEMENTATION_PLAN.md §15).
  *
@@ -43,7 +77,7 @@ export function noteExtensions(placeholder: string): Extensions {
       },
     }),
 
-    Image.configure({
+    StorageImage.configure({
       inline: false,
       // Uploads arrive in Milestone 10; until then an image is a URL the user
       // pastes, so remote sources have to be allowed.

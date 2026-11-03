@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, GanttChart } from "lucide-react";
-import { useMemo, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { ClayButton } from "@/components/ui/clay-button";
 import { IconButton } from "@/components/ui/icon-button";
 import { PriorityBadge } from "@/components/ui/priority-badge";
@@ -37,9 +37,16 @@ export function TimelineWorkspace({ anchor, scope, onChangeAnchor, onChangeScope
   const unscheduled = visible.filter((note) => noteRange(note).status === "undated");
   const categoriesById = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
   const lanesById = useMemo(() => new Map(lanes.map((lane) => [lane.id, lane])), [lanes]);
+  const surface = useRef<HTMLElement>(null);
+  useEffect(() => {
+    // Bring today's column into view so a long range does not open on the past.
+    const column = surface.current?.querySelector<HTMLElement>('[data-today="true"]');
+    column?.scrollIntoView?.({ inline: "center", block: "nearest" });
+  }, [window]);
+  const overdue = bars.filter(({ note }) => !note.completed && note.dueAt && new Date(note.dueAt).getTime() < today.getTime()).length;
   const columnsStyle = { "--timeline-days": window.days.length } as CSSProperties;
 
-  return <main id="main-content" tabIndex={-1} aria-label="Timeline" data-testid="timeline-workspace"
+  return <main ref={surface} id="main-content" tabIndex={-1} aria-label="Timeline" data-testid="timeline-workspace"
     className="tk-scrollbar-thin relative z-[var(--z-board)] min-h-0 min-w-0 flex-1 overflow-auto p-2 sm:p-4">
     <div className="mb-3 flex flex-wrap items-center gap-2">
       <GanttChart size={18} aria-hidden="true" />
@@ -52,6 +59,7 @@ export function TimelineWorkspace({ anchor, scope, onChangeAnchor, onChangeScope
       <ClayButton size="sm" variant="ghost" onClick={() => onChangeAnchor(today)}>Today</ClayButton>
       <IconButton label="Next period" icon={<ChevronRight size={16} />} onClick={() => onChangeAnchor(shiftPeriod(anchor, scope, 1))} />
     </div>
+    <p className="mb-2 text-xs tabular-nums text-muted-foreground" data-testid="timeline-summary">{bars.length} {bars.length === 1 ? "task" : "tasks"} in view{overdue ? ` · ${overdue} overdue` : ""}{unscheduled.length ? ` · ${unscheduled.length} unscheduled` : ""}</p>
     <p className="mb-2 text-xs text-muted-foreground">Scroll horizontally to explore dates. Open a task to edit its start and due dates.</p>
     {bars.length === 0 ? <div role="status" className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
       <span>No tasks overlap this period.</span>

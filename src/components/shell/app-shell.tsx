@@ -12,6 +12,9 @@ import { useOfflineDirectory, useOfflineShell } from "@/features/offline/use-off
 import { LifecycleWorkspace } from "@/components/lifecycle/lifecycle-workspace";
 import { useLocalHistory } from "@/features/history/use-local-history";
 import { ReminderCenter } from "@/components/shell/reminder-center";
+import { GuideMap, guideNav, guideSelector, type GuideStep } from "@/components/shell/guide-map";
+import { SharedWorkspace } from "@/components/shell/shared-workspace";
+import { ReminderToasts } from "@/components/shell/reminder-toasts";
 import { useReminders } from "@/features/reminders/use-reminders";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -114,6 +117,29 @@ export function AppShell({ background, user = null, onSignOut }: AppShellProps) 
   useCommandShortcut(openSearch);
   const [activeView, setActiveView] = useState<BoardViewId>(BOARD_VIEW_ID);
 
+  const guideSteps = useMemo<GuideStep[]>(() => {
+    const goNav = (id: NavItemId) => () => {
+      setActiveNavItem(id);
+      if (id === "board" || id === "canvas" || id === "calendar" || id === "timeline") setActiveView(id);
+    };
+    return [
+      { id: "dashboard", title: "Dashboard", body: "Your overview: what is due, what is in progress and recent activity.", go: goNav("dashboard"), find: guideNav("Dashboard") },
+      { id: "inbox", title: "Inbox", body: "Capture a thought quickly, then organize it into a column when you are ready.", go: goNav("inbox"), find: guideNav("Inbox") },
+      { id: "board", title: "Board", body: "Notes in columns. Drag notes between columns to move them along.", go: goNav("board"), find: guideNav("Board") },
+      { id: "layouts", title: "Switch layouts", body: "View the same notes as a Board, Grid or List, and filter or sort them from here.", go: goNav("board"), find: guideSelector('[data-guide="toolbar"]') },
+      { id: "new-note", title: "Create a note", body: "New note makes a blank card in one click. Use the arrow for templates.", go: goNav("board"), find: guideSelector('[data-guide="new-note"]') },
+      { id: "canvas", title: "Canvas", body: "Place notes freely on an infinite canvas. Drag to move, use the handles to resize, pinch or scroll to zoom.", go: goNav("canvas"), find: guideNav("Canvas") },
+      { id: "fullscreen", title: "Fullscreen", body: "Expands the board or canvas to fill the screen. Press Esc to leave.", go: goNav("canvas"), find: guideSelector('button[aria-label="Toggle fullscreen"]') },
+      { id: "calendar", title: "Calendar", body: "Notes with due dates laid out by day. Select a day to add a note on it.", go: goNav("calendar"), find: guideNav("Calendar") },
+      { id: "timeline", title: "Timeline", body: "Notes with start and due dates drawn as bars across a week, month or quarter.", go: goNav("timeline"), find: guideNav("Timeline") },
+      { id: "notes", title: "All Notes", body: "Every note in one searchable list, with status filters and sorting.", go: goNav("notes"), find: guideNav("All Notes") },
+      { id: "shared", title: "Shared", body: "Boards shared with you, invitations waiting for you, and the ones you sent.", go: goNav("shared"), find: guideNav("Shared") },
+      { id: "search", title: "Search", body: "Find any note instantly. Press Ctrl K from anywhere.", find: guideSelector('header button[aria-keyshortcuts="Control+K"], header button[aria-label="Search"]') },
+      { id: "share", title: "Share", body: "Invite people to view or edit this board with a link.", find: guideSelector("[data-share-trigger]") },
+      { id: "reminders", title: "Reminders", body: "Set a reminder on a note. It pops up here and in the bell when it is due.", find: guideSelector('header button[aria-label^="Notifications"]') },
+    ];
+  }, []);
+
   // Restores notes saved in localStorage. The board starts empty
   // until saved personal notes are restored. When a board is open
   // in the cloud, `useBoardContents` replaces that with the server's copy.
@@ -127,7 +153,16 @@ export function AppShell({ background, user = null, onSignOut }: AppShellProps) 
   const queryClient = useQueryClient();
   const boardId = activeBoard?.id ?? null;
 
-  const collaborationView = activeNavItem === "board" ? `board:${activeView}` : activeNavItem;
+  // One key per surface, however the user got there: the sidebar's Canvas and the
+  // toolbar's Canvas are the same place, so collaborators must see each other.
+  const viewingShared = cloudEnabled && Boolean(activeBoard) && activeBoard?.ownerId !== user?.id;
+  /** Leaves a shared board and returns to the user's own workspace and first board. */
+  const goToMyBoard = useCallback(() => {
+    const own = workspace.workspaces.find((item) => item.ownerId === user?.id);
+    if (own) useWorkspaceStore.getState().setActiveWorkspace(own.id);
+    setActiveNavItem("board"); setActiveView("board");
+  }, [workspace.workspaces, user?.id]);
+  const collaborationView = activeNavItem === "board" || activeNavItem === "canvas" || activeNavItem === "calendar" || activeNavItem === "timeline" ? `board:${activeView}` : activeNavItem;
   const collaboration = useBoardCollaboration(boardId, user, collaborationView);
   const canEdit = !cloudEnabled || collaboration.role === "owner" || collaboration.role === "editor";
   useEffect(() => { const notice = () => setConflictNotice(true); window.addEventListener("tackly:conflict-copy", notice); return () => window.removeEventListener("tackly:conflict-copy", notice); }, []);
@@ -162,8 +197,9 @@ export function AppShell({ background, user = null, onSignOut }: AppShellProps) 
   const isDashboard = activeNavItem === "dashboard";
   const isLibrary = activeNavItem === "inbox" || activeNavItem === "mine" || activeNavItem === "notes";
   const isAnalytics = activeNavItem === "analytics";
+  const isShared = activeNavItem === "shared";
   const isLifecycle = activeNavItem === "archive" || activeNavItem === "trash";
-  const isCanvas = !isDashboard && !isLifecycle && !isAnalytics && !isLibrary && activeView === "canvas";
+  const isCanvas = !isDashboard && !isLifecycle && !isAnalytics && !isShared && !isLibrary && activeView === "canvas";
 
   const notes = useNoteStore((state) => state.notes);
   const sampleCleanupPending = useNoteStore((state) => state.legacySamplesPending);
@@ -318,13 +354,14 @@ export function AppShell({ background, user = null, onSignOut }: AppShellProps) 
         }}
         ownerId={user?.id ?? null}
         onOpenImportExport={() => setImportExportOpen(true)}
-        onCompose={isDashboard || isLifecycle || isLibrary ? () => {
+        onCompose={isDashboard || isLifecycle || isLibrary || isShared ? () => {
           if (!dashboardReady || !canEdit) return;
           handleAddNote(); setActiveNavItem("board"); setActiveView(BOARD_VIEW_ID);
         } : handleAddNote}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <div className="relative z-[var(--z-header)] shrink-0 bg-surface">
         <BreadcrumbBar
           section={sectionLabel(activeNavItem, activeView)}
           onOpenShare={() => setShareOpen(true)}
@@ -347,13 +384,14 @@ export function AppShell({ background, user = null, onSignOut }: AppShellProps) 
           setActiveNavItem("board");setActiveView("board");
         }} />
         {cloudEnabled && boardId ? <div className="flex flex-wrap items-center gap-3 border-b border-border bg-surface px-4 py-2 text-xs text-muted-foreground" aria-label="Collaboration status">
+          {viewingShared ? <><span className="font-medium text-foreground">Shared board</span><button type="button" className="rounded-md border border-border px-2 py-1 text-foreground" onClick={goToMyBoard}>← Back to my board</button></> : null}
           <span role="status">{collaboration.error ? "Sharing connection interrupted" : collaboration.loading ? "Checking access…" : collaboration.role ? `${collaboration.role === "viewer" ? "View only" : "Can edit"} · ${collaboration.status}` : "Board access removed"}</span>
           {collaboration.cursors.length ? <span>{Array.from(new Set(collaboration.cursors.map(cursor=>cursor.name))).join(", ")} online</span> : null}
           {collaboration.error ? <button className="underline" onClick={collaboration.retry}>Retry sharing connection</button> : null}
         </div> : null}
         {!cloudEnabled && sampleCleanupPending ? <div role="status" className="flex items-center gap-3 border-b border-border bg-surface-raised px-4 py-2 text-sm">Sample cleanup needs browser storage space. Your saved notes are kept.<button className="ml-auto underline" onClick={() => void useNoteStore.persist.rehydrate()}>Retry cleanup</button></div> : null}
         {conflictNotice ? <div role="status" className="flex items-center gap-3 border-b border-border bg-surface-raised px-4 py-2 text-sm">Concurrent edits were kept for review. Look for conflict copies in your notes or columns.<button className="ml-auto underline" onClick={()=>setConflictNotice(false)}>Dismiss</button></div> : null}
-        {!isDashboard && !isLifecycle && !isAnalytics && !isLibrary ? <BoardToolbar
+        {!isDashboard && !isLifecycle && !isAnalytics && !isShared && !isLibrary ? <BoardToolbar
           canAddNote={dashboardReady && canEdit}
           showViewSwitcher={activeNavItem === "board"}
           activeView={activeView}
@@ -367,6 +405,7 @@ export function AppShell({ background, user = null, onSignOut }: AppShellProps) 
           onFitToContent={handleFitToContent}
           onAddCanvasNote={handleAddCanvasNote}
         /> : null}
+        </div>
 
         <BoardStatus
           loading={boardContents.loading || provisioning.busy || (cloudEnabled && workspace.loading)}
@@ -402,6 +441,19 @@ export function AppShell({ background, user = null, onSignOut }: AppShellProps) 
             if (!canEdit || !dashboardReady) return;const laneId=firstLaneId(useLaneStore.getState());if(!laneId)return;
             const id=useNoteStore.getState().addNote(laneId,{inbox:activeNavItem === "inbox"});if(id)useNoteStore.getState().expandNote(id);
           }} />
+        ) : isShared ? (
+          <SharedWorkspace signedIn={cloudEnabled} onBackToMine={goToMyBoard} viewingShared={viewingShared} onShare={() => setShareOpen(true)} onOpenBoard={async (id, workspaceId) => {
+            let workspace = workspaceId;
+            if (!workspace) {
+              const { data, error } = await getSupabaseBrowserClient().from("boards").select("workspace_id").eq("id", id).single();
+              if (error || !data) throw Error("Joined, but the board could not be opened yet. Retry.");
+              workspace = data.workspace_id;
+            }
+            await queryClient.invalidateQueries({ queryKey: queryKeys.workspaces() });
+            await queryClient.invalidateQueries({ queryKey: queryKeys.boards(workspace), refetchType: "all" });
+            useWorkspaceStore.getState().setActiveWorkspace(workspace); useWorkspaceStore.getState().setActiveBoard(id);
+            setActiveNavItem("board"); setActiveView("board");
+          }} />
         ) : isAnalytics ? (
           <AnalyticsWorkspace boards={workspace.boards} cloud={cloudEnabled} ownerId={user?.id ?? null} notes={dashboardReady ? notes.filter((note) => note.boardId === context.boardId && note.ownerId === context.ownerId) : []} />
         ) : isCanvas ? (
@@ -427,6 +479,8 @@ export function AppShell({ background, user = null, onSignOut }: AppShellProps) 
       <CollaboratorCursors cursors={collaboration.cursors} view={collaborationView} />
       <ShareBoardDialog key={boardId ?? "local"} open={shareOpen} onOpenChange={setShareOpen} boardId={boardId} boardName={activeBoard?.name ?? "board"} role={collaboration.role} signedIn={cloudEnabled} />
       <ImportExportDialog open={importExportOpen} onOpenChange={setImportExportOpen} board={activeBoard} boards={workspace.boards} scope={context} ready={dashboardReady} />
+      <GuideMap steps={guideSteps} />
+      <ReminderToasts items={reminders.items} onRead={reminders.markRead} onOpenNote={openReminderNote} />
       <ReminderCenter open={remindersOpen} onClose={() => setRemindersOpen(false)}
         items={reminders.items} permission={reminders.permission} error={reminders.error}
         onRetry={reminders.retry} onEnableBrowser={() => void reminders.requestPermission()}

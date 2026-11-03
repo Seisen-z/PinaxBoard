@@ -78,7 +78,7 @@ export function useReminders(notes: readonly Note[], scope: string, onOpenNote: 
 
   useEffect(() => {
     void sweep();
-    const timer = window.setInterval(() => void sweep(), 15_000);
+    const timer = window.setInterval(() => void sweep(), 5_000);
     const refresh = () => void sweep();
     document.addEventListener("visibilitychange", refresh);
     window.addEventListener("storage", refresh);

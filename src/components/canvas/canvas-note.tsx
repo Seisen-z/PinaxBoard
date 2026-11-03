@@ -176,7 +176,7 @@ export const CanvasNote = memo(function CanvasNote({
         onTitleChange={actions.setTitle}
         onContentChange={actions.setContent}
         onToggleSubtask={actions.toggleSubtask}
-        className="h-full overflow-hidden"
+        className="tk-scrollbar-thin h-full overflow-y-auto overflow-x-hidden"
       />
 
       {canEdit && selected && soleSelection && !note.locked ? (
@@ -195,7 +195,7 @@ export const CanvasNote = memo(function CanvasNote({
  * opened on the canvas.
  */
 function isInteractiveTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
+  if (!(target instanceof Element)) return false;
 
   return Boolean(
     target.closest(

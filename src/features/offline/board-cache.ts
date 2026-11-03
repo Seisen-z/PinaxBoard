@@ -21,7 +21,7 @@ export function writeCachedBoard(record: CachedBoard): void {
 }
 export function sameRecord(a: unknown, b: unknown): boolean { return JSON.stringify(a, (key, value: unknown) => key === "updatedAt" || key === "createdAt" ? undefined : value) === JSON.stringify(b, (key, value: unknown) => key === "updatedAt" || key === "createdAt" ? undefined : value); }
 /** Three-way recovery. Concurrent note edits retain the server note AND a new local conflict copy. */
-export function reconcileBoard(remote: BoardContents, cached: CachedBoard): BoardContents {
+export function reconcileBoard(remote: BoardContents, cached: CachedBoard, allowCopies = true): BoardContents {
   if (!cached.pending) return remote;
   const base = new Map(cached.baseline.notes.map((note) => [note.id, note]));
   const server = new Map(remote.notes.map((note) => [note.id, note]));
@@ -30,7 +30,11 @@ export function reconcileBoard(remote: BoardContents, cached: CachedBoard): Boar
     const previous = base.get(local.id); if (sameRecord(local, previous)) continue;
     const other = server.get(local.id);
     if (sameRecord(local, other)) continue;
-    if (!other && previous || other && previous && !sameRecord(other, previous)) {
+    if (!allowCopies && other && previous && !sameRecord(other, previous)) {
+      // Online the whole time: a differing server copy is our own saves echoing
+      // back (or live collaboration), not an offline divergence. Local wins.
+      const index = notes.findIndex((note) => note.id === local.id); if (index >= 0) notes[index] = local;
+    } else if (!other && previous || other && previous && !sameRecord(other, previous)) {
       // Remote purge or concurrent edit: never resurrect/overwrite the server record.
       const id = createId(); notes.push({ ...local, id, createdBy: cached.ownerId, title: `${local.title || "Untitled"} (offline conflict copy)`, deletedAt: null, archived: false, locked: false, recurrenceSourceId: null, subtasks: local.subtasks.map((item) => ({ ...item, id: createId(), noteId: id })) });
     } else { const index = notes.findIndex((note) => note.id === local.id); if (index < 0) notes.push(local); else notes[index] = local; }
@@ -44,7 +48,7 @@ export function reconcileBoard(remote: BoardContents, cached: CachedBoard): Boar
       if(lanes.length>=MAX_LANES)throw Error("Concurrent columns exceed the 12-column limit. Your local changes remain in the device backup; remove a local column and retry.");
       lanes.push(lane);
     } else if (!sameRecord(lane, previous) && !sameRecord(lane, lanes[index])) {
-      if(index>=0&&sameRecord(lanes[index],previous))lanes[index]=lane;
+      if(index>=0&&(!allowCopies||sameRecord(lanes[index],previous)))lanes[index]=lane;
       else {
         if(lanes.length>=MAX_LANES)throw Error("A column changed concurrently and there is no room for a conflict copy. Your local changes remain in the device backup; remove a local column and retry.");
         lanes.push({...lane,id:createId(),name:lane.name.slice(0,43)+" (conflict copy)",position:lanes.length});

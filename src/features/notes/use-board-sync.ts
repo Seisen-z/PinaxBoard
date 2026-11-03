@@ -101,6 +101,8 @@ export function useBoardSync({
 
   const flushRef = useRef<(() => void) | null>(null);
   const needsRecovery = useRef(false);
+  /** True once the browser actually lost connectivity; only then may recovery fork conflict copies. */
+  const offlineSeen = useRef(false);
   const confirmedRef = useRef<BoardContents>({ notes: [], lanes: [] });
   const scopeRef = useRef<string | null>(null);
   const markClean = useCallback((baseline?: BoardContents) => {
@@ -139,7 +141,7 @@ export function useBoardSync({
     const baseline = confirmedRef.current;
     try { writeCachedBoard({ boardId, ownerId, baseline, working, pending: true, revision: Date.now() }); }
     catch { setSyncError("Device storage is full. Keep this tab open and export a backup, then retry."); return; }
-    if (typeof navigator !== "undefined" && navigator.onLine === false) { setOffline(); return; }
+    if (typeof navigator !== "undefined" && navigator.onLine === false) { offlineSeen.current = true; setOffline(); return; }
 
     inFlight.current = true;
     setSaving(countPending(diff));
@@ -222,6 +224,7 @@ export function useBoardSync({
     const journal = () => {
       const state = useNoteStore.getState();
       if (!ownerId || state.boardContext.ownerId !== recordOwnerId || state.boardContext.boardId !== boardId || scopeRef.current !== `${ownerId}:${boardId}`) return;
+      if (typeof navigator !== "undefined" && navigator.onLine === false) offlineSeen.current = true;
       const working = { notes: state.notes, lanes: useLaneStore.getState().lanes };
       const baseline = confirmedRef.current;
       try { writeCachedBoard({ ownerId, boardId, working, baseline, pending: !sameRecord(working, baseline), revision: Date.now() }); }
@@ -268,7 +271,9 @@ export function useBoardSync({
         const state = useNoteStore.getState();
         if (state.boardContext.boardId !== boardId || state.boardContext.ownerId !== recordOwnerId) return;
         const cached = readCachedBoard(ownerId, boardId);
-        const next = cached && canWrite ? reconcileBoard(remote, cached) : remote;
+        const wasOffline = needsRecovery.current || offlineSeen.current;
+        const next = cached && canWrite ? reconcileBoard(remote, cached, wasOffline) : remote;
+        offlineSeen.current = false;
         const expanded = state.expandedNoteId;
         // Switch baseline before resetting stores; subscribers journal the recovered diff.
         confirmedRef.current = remote; noteSnapshot.current = snapshotById(remote.notes); laneSnapshot.current = snapshotById(remote.lanes);
@@ -289,8 +294,10 @@ export function useBoardSync({
       const attempt = () => { if (inFlight.current || recoveringRef.current) { timer=setTimeout(attempt,200); return; } void recover(); };
       timer=setTimeout(attempt,150);
     };
+    const onOffline = () => { offlineSeen.current = true; };
+    window.addEventListener("offline", onOffline);
     window.addEventListener("online", onOnline);window.addEventListener("tackly:remote-board",onRemote);
-    return () => { clearTimeout(timer); window.removeEventListener("online", onOnline);window.removeEventListener("tackly:remote-board",onRemote); };
+    return () => { clearTimeout(timer); window.removeEventListener("offline", onOffline); window.removeEventListener("online", onOnline);window.removeEventListener("tackly:remote-board",onRemote); };
   }, [enabled, boardId, ownerId, recordOwnerId, canWrite, flushNow, setSyncError]);
 
   const retry = useCallback(() => {

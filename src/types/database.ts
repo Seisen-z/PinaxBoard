@@ -223,7 +223,9 @@ export type Database = {
       board_role: {Args:{p_board_id:string};Returns:string|null};
       board_people: {Args:{p_board_id:string};Returns:Json};
       board_invitation_list: {Args:{p_board_id:string};Returns:Json};
-      create_board_invitation: {Args:{p_board_id:string;p_role:string};Returns:Json};
+      create_board_invitation: {Args:{p_board_id:string;p_role:string;p_days?:number;p_email?:string;p_scope?:string;p_note_ids?:string[]};Returns:Json};
+      shared_overview: {Args:Record<string,never>;Returns:Json};
+      accept_invitation_by_id: {Args:{p_invite_id:string};Returns:string};
       accept_board_invitation: {Args:{p_token:string};Returns:string};
       revoke_board_invitation: {Args:{p_invite_id:string};Returns:undefined};
       manage_board_member: {Args:{p_board_id:string;p_user_id:string;p_role:string};Returns:undefined};

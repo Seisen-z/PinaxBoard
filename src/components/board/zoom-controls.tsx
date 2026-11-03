@@ -31,6 +31,13 @@ export function ZoomControls({
 }: ZoomControlsProps) {
   const percent = Math.round(zoom * 100);
 
+  const toggleFullscreen = () => {
+    if (onToggleFullscreen) return onToggleFullscreen();
+    // Only the board / canvas surface goes fullscreen, not the whole app.
+    if (document.fullscreenElement) void document.exitFullscreen?.().catch(() => {});
+    else void document.getElementById("main-content")?.requestFullscreen?.().catch(() => {});
+  };
+
   const stepTo = (direction: "in" | "out") => {
     const next =
       direction === "in"
@@ -75,7 +82,7 @@ export function ZoomControls({
         icon={<Maximize2 size={16} />}
         variant="ghost"
         size="sm"
-        onClick={onToggleFullscreen}
+        onClick={toggleFullscreen}
       />
     </div>
   );

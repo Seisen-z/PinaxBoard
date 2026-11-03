@@ -6,6 +6,7 @@ import {
   Calendar,
   Columns3,
   GanttChartSquare,
+  Share2,
   Inbox,
   LayoutDashboard,
   Settings,
@@ -40,6 +41,7 @@ export const NAV_VIEWS = [
   { id: "timeline", label: "Timeline", icon: GanttChartSquare },
   { id: "notes", label: "All Notes", icon: StickyNote },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
+  { id: "shared", label: "Shared", icon: Share2 },
 ] as const satisfies readonly NavItem[];
 
 export const NAV_FOOTER = [

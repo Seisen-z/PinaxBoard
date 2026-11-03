@@ -8,6 +8,8 @@ import type { Attachment } from "@/types/note";
 
 export interface AttachmentPreviewProps {
   attachment: Attachment;
+  /** `large` shows the actual image, filling the row; the default is a thumbnail. */
+  size?: "thumb" | "large";
 }
 
 /**
@@ -21,7 +23,7 @@ export interface AttachmentPreviewProps {
  * otherwise sign thirty URLs before showing anything, and most of them scroll
  * past unseen.
  */
-export function AttachmentPreview({ attachment }: AttachmentPreviewProps) {
+export function AttachmentPreview({ attachment, size = "thumb" }: AttachmentPreviewProps) {
   const [url, setUrl] = useState<string | null>(attachment.publicUrl);
 
   useEffect(() => {
@@ -44,6 +46,14 @@ export function AttachmentPreview({ attachment }: AttachmentPreviewProps) {
     };
   }, [attachment]);
 
+  if (!url && size === "large") {
+    return (
+      <div data-testid="attachment-preview-pending" className="flex h-24 w-full items-center justify-center rounded-md bg-current/5">
+        <ImageIcon size={18} aria-hidden="true" className="opacity-50" />
+      </div>
+    );
+  }
+
   if (!url) {
     return (
       <ImageIcon
@@ -61,10 +71,10 @@ export function AttachmentPreview({ attachment }: AttachmentPreviewProps) {
     // build cannot know. These are 28px thumbnails either way.
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={url}
+      src={url ?? undefined}
       alt={attachment.fileName}
       data-testid="attachment-preview"
-      className="size-7 shrink-0 rounded object-cover"
+      className={size === "large" ? "max-h-72 w-full rounded-md object-contain" : "size-7 shrink-0 rounded object-cover"}
       loading="lazy"
     />
   );
