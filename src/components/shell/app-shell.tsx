@@ -14,6 +14,7 @@ import { useLocalHistory } from "@/features/history/use-local-history";
 import { ReminderCenter } from "@/components/shell/reminder-center";
 import { GuideMap, guideNav, guideSelector, type GuideStep } from "@/components/shell/guide-map";
 import { SharedWorkspace } from "@/components/shell/shared-workspace";
+import { BoardAttachmentsProvider } from "@/features/attachments/board-attachments";
 import { ReminderToasts } from "@/components/shell/reminder-toasts";
 import { useReminders } from "@/features/reminders/use-reminders";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -209,6 +210,7 @@ export function AppShell({ background, user = null, onSignOut }: AppShellProps) 
     : context.boardId === LOCAL_BOARD_CONTEXT.boardId && context.ownerId === LOCAL_BOARD_CONTEXT.ownerId;
 
   const reminderNotes = useMemo(() => dashboardReady ? notes.filter((note) => note.boardId === context.boardId && note.ownerId === context.ownerId) : [], [dashboardReady, notes, context.boardId, context.ownerId]);
+  const noteIds = useMemo(() => reminderNotes.map((note) => note.id), [reminderNotes]);
   const openReminderNote = useCallback((id: string) => {
     const state = useNoteStore.getState();
     if (state.boardContext.boardId !== context.boardId || state.boardContext.ownerId !== context.ownerId) return;
@@ -337,6 +339,7 @@ export function AppShell({ background, user = null, onSignOut }: AppShellProps) 
       workspaceId={activeWorkspace?.id ?? null}
       ownerId={user?.id ?? null}
     >
+    <BoardAttachmentsProvider boardId={boardId} noteIds={noteIds} enabled={cloudEnabled && dashboardReady}>
     <div className="relative flex h-dvh overflow-hidden pb-14 md:pb-0">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[var(--z-overlay)] focus:rounded focus:bg-surface focus:p-3">Skip to notes</a>
       <button type="button" aria-label="Quick add note" disabled={!dashboardReady} onClick={() => { handleAddNote(); setActiveNavItem("board"); setActiveView(BOARD_VIEW_ID); }} className="fixed bottom-20 right-4 z-[var(--z-header)] grid size-12 place-items-center rounded-full border border-border bg-primary text-2xl text-primary-foreground md:hidden">+</button>
@@ -496,6 +499,7 @@ export function AppShell({ background, user = null, onSignOut }: AppShellProps) 
         ownerId={user?.id ?? null}
       />
     </div>
+    </BoardAttachmentsProvider>
     </TaxonomyProvider>
   );
 }

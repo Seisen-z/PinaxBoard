@@ -93,6 +93,7 @@ export function useAttachmentUploads(
       void queryClient.invalidateQueries({
         queryKey: queryKeys.attachments(attachment.noteId),
       });
+      void queryClient.invalidateQueries({ queryKey: ["board-attachments"] });
     },
   });
 
@@ -177,6 +178,7 @@ export function useAttachmentUploads(
         void queryClient.invalidateQueries({
           queryKey: queryKeys.attachments(noteId),
         });
+        void queryClient.invalidateQueries({ queryKey: ["board-attachments"] });
       }
 
       return saved;

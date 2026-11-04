@@ -16,7 +16,7 @@ import { useCallback, useRef, useState } from "react";
 import { AttachmentPreview } from "@/components/notes/attachment-preview";
 import { ClayButton } from "@/components/ui/clay-button";
 import { IconButton } from "@/components/ui/icon-button";
-import { attachmentDownloadUrl } from "@/features/attachments/repository";
+import { downloadAttachmentFile } from "@/components/notes/note-attachments";
 import { formatBytes } from "@/features/attachments/upload-policy";
 import type { AttachmentUploads } from "@/features/attachments/queries";
 import { cn } from "@/lib/utils";
@@ -235,22 +235,14 @@ function AttachmentRow({
   const isImage = attachment.mimeType.startsWith("image/");
   const [downloadError, setDownloadError] = useState(false);
 
-  const download = async () => {
-    setDownloadError(false);
-    try {
-      const url = await attachmentDownloadUrl(attachment);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = attachment.fileName;
-      link.rel = "noopener";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (cause) {
-      console.error("Supabase: could not prepare a download", cause);
-      setDownloadError(true);
-    }
-  };
+  const download = () =>
+    downloadAttachmentFile(attachment).then(
+      () => setDownloadError(false),
+      (cause: unknown) => {
+        console.error("Supabase: could not prepare a download", cause);
+        setDownloadError(true);
+      },
+    );
 
   return (
     <li

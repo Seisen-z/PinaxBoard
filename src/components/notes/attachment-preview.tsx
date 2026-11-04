@@ -10,6 +10,8 @@ export interface AttachmentPreviewProps {
   attachment: Attachment;
   /** `large` shows the actual image, filling the row; the default is a thumbnail. */
   size?: "thumb" | "large";
+  /** Extra classes for the large image, e.g. a smaller height cap on a card. */
+  className?: string;
 }
 
 /**
@@ -23,7 +25,7 @@ export interface AttachmentPreviewProps {
  * otherwise sign thirty URLs before showing anything, and most of them scroll
  * past unseen.
  */
-export function AttachmentPreview({ attachment, size = "thumb" }: AttachmentPreviewProps) {
+export function AttachmentPreview({ attachment, size = "thumb", className }: AttachmentPreviewProps) {
   const [url, setUrl] = useState<string | null>(attachment.publicUrl);
 
   useEffect(() => {
@@ -74,7 +76,7 @@ export function AttachmentPreview({ attachment, size = "thumb" }: AttachmentPrev
       src={url ?? undefined}
       alt={attachment.fileName}
       data-testid="attachment-preview"
-      className={size === "large" ? "max-h-72 w-full rounded-md object-contain" : "size-7 shrink-0 rounded object-cover"}
+      className={size === "large" ? `max-h-72 w-full rounded-md object-contain ${className ?? ""}` : "size-7 shrink-0 rounded object-cover"}
       loading="lazy"
     />
   );

@@ -157,7 +157,10 @@ export const CanvasNote = memo(function CanvasNote({
         width,
         height,
         zIndex,
-      }}
+        // The card scrolls as a whole, so the body must not stop at the lane
+        // cap of 180px: resizing taller has to reveal more text.
+        "--note-content-max-height": "none",
+      } as React.CSSProperties}
       onPointerDown={(event) => {
         // A press on a control or a text field belongs to that control. Without
         // this, starting a drag from anywhere on the card would steal focus

@@ -1,5 +1,7 @@
 "use client";
 
+import { NoteAttachments } from "@/components/notes/note-attachments";
+import { useNoteAttachments } from "@/features/attachments/board-attachments";
 import { useCanEditBoard } from "@/features/collaboration/access";
 import { memo, type ReactNode } from "react";
 
@@ -92,6 +94,7 @@ export const PaperNoteCard = memo(function PaperNoteCard({
   if (!canEdit) { onTitleChange=undefined; onContentChange=undefined; onToggleSubtask=undefined; }
   const { paperStyle, textureClass } = resolveNoteAppearance(note.appearance);
   const progress = getSubtaskProgress(note);
+  const attachments = useNoteAttachments(note.id);
 
   const card = (
     <SurfaceCard
@@ -173,6 +176,8 @@ export const PaperNoteCard = memo(function PaperNoteCard({
             }
           : {})}
       />
+
+      <NoteAttachments attachments={attachments} />
 
       <NoteTags tags={tags} category={category} />
 

@@ -56,6 +56,26 @@ export async function fetchAttachments(noteId: UUID): Promise<Attachment[]> {
   return (data ?? []).map(attachmentFromRow);
 }
 
+/** Every attachment for a set of notes, in as few requests as possible. */
+export async function fetchAttachmentsForNotes(noteIds: readonly UUID[]): Promise<Attachment[]> {
+  const supabase = getSupabaseBrowserClient();
+  const rows: Attachment[] = [];
+
+  // The ids travel in the URL, so a large board is fetched in slices.
+  for (let start = 0; start < noteIds.length; start += 100) {
+    const { data, error } = await supabase
+      .from("attachments")
+      .select("*")
+      .in("note_id", noteIds.slice(start, start + 100))
+      .order("created_at", { ascending: true });
+
+    if (error) fail("load the files on these notes", error);
+    rows.push(...(data ?? []).map(attachmentFromRow));
+  }
+
+  return rows;
+}
+
 export interface UploadAttachmentInput {
   file: File;
   noteId: UUID;
